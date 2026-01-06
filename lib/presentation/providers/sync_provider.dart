@@ -1,7 +1,8 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:isar/isar.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:connectivity_plus/connectivity_plus.dart' as connectivity_plus;
 
 import '../../data/datasources/local/database_service.dart';
 import '../../data/datasources/local/preferences_service.dart';
@@ -54,7 +55,7 @@ class SyncState {
 // Sync Provider
 @riverpod
 class Sync extends _$Sync {
-  StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
+  StreamSubscription<connectivity_plus.ConnectivityResult>? _connectivitySubscription;
   Timer? _syncTimer;
 
   @override
@@ -83,14 +84,12 @@ class Sync extends _$Sync {
 
   void _initializeConnectivity() {
     // Listen to connectivity changes
-    _connectivitySubscription = Connectivity()
+    _connectivitySubscription = connectivity_plus.Connectivity()
         .onConnectivityChanged
-        .listen((List<ConnectivityResult> results) {
-      final isOnline = results.any((result) =>
-        result == ConnectivityResult.mobile ||
-        result == ConnectivityResult.wifi ||
-        result == ConnectivityResult.ethernet
-      );
+        .listen((connectivity_plus.ConnectivityResult result) {
+      final isOnline = result == connectivity_plus.ConnectivityResult.mobile ||
+          result == connectivity_plus.ConnectivityResult.wifi ||
+          result == connectivity_plus.ConnectivityResult.ethernet;
 
       _updateConnectionStatus(isOnline);
 
@@ -106,12 +105,10 @@ class Sync extends _$Sync {
 
   Future<void> _checkInitialConnectivity() async {
     try {
-      final results = await Connectivity().checkConnectivity();
-      final isOnline = results.any((result) =>
-        result == ConnectivityResult.mobile ||
-        result == ConnectivityResult.wifi ||
-        result == ConnectivityResult.ethernet
-      );
+      final result = await connectivity_plus.Connectivity().checkConnectivity();
+      final isOnline = result == connectivity_plus.ConnectivityResult.mobile ||
+          result == connectivity_plus.ConnectivityResult.wifi ||
+          result == connectivity_plus.ConnectivityResult.ethernet;
       _updateConnectionStatus(isOnline);
     } catch (e) {
       _updateConnectionStatus(false);
@@ -139,12 +136,15 @@ class Sync extends _$Sync {
   Future<int> _getPendingCount() async {
     try {
       final isar = DatabaseService.instance;
-      return await isar.syncQueues
+      final pendingCount = await isar.syncQueues
           .filter()
           .statusEqualTo(SyncQueueStatus.pending)
-          .or()
+          .count();
+      final failedCount = await isar.syncQueues
+          .filter()
           .statusEqualTo(SyncQueueStatus.failed)
           .count();
+      return pendingCount + failedCount;
     } catch (e) {
       return 0;
     }
@@ -188,12 +188,15 @@ class Sync extends _$Sync {
       final pendingItems = await isar.syncQueues
           .filter()
           .statusEqualTo(SyncQueueStatus.pending)
-          .or()
+          .findAll();
+      final failedItems = await isar.syncQueues
+          .filter()
           .statusEqualTo(SyncQueueStatus.failed)
           .findAll();
+      final allItems = [...pendingItems, ...failedItems];
 
       // Simulate processing each item
-      for (final item in pendingItems) {
+      for (final item in allItems) {
         // TODO: Sync with Firebase based on operation and collection
         // For now, mark as completed
         await isar.writeTxn(() async {
@@ -234,21 +237,19 @@ class Sync extends _$Sync {
 
 // Connectivity Provider (simple bool)
 @riverpod
-class Connectivity extends _$Connectivity {
-  StreamSubscription<List<ConnectivityResult>>? _subscription;
+class NetworkStatus extends _$NetworkStatus {
+  StreamSubscription<connectivity_plus.ConnectivityResult>? _subscription;
 
   @override
   bool build() {
     _checkConnectivity();
 
-    _subscription = ConnectivityPlus()
+    _subscription = connectivity_plus.Connectivity()
         .onConnectivityChanged
-        .listen((List<ConnectivityResult> results) {
-      state = results.any((result) =>
-        result == ConnectivityResult.mobile ||
-        result == ConnectivityResult.wifi ||
-        result == ConnectivityResult.ethernet
-      );
+        .listen((connectivity_plus.ConnectivityResult result) {
+      state = result == connectivity_plus.ConnectivityResult.mobile ||
+          result == connectivity_plus.ConnectivityResult.wifi ||
+          result == connectivity_plus.ConnectivityResult.ethernet;
     });
 
     ref.onDispose(() {
@@ -260,17 +261,12 @@ class Connectivity extends _$Connectivity {
 
   Future<void> _checkConnectivity() async {
     try {
-      final results = await ConnectivityPlus().checkConnectivity();
-      state = results.any((result) =>
-        result == ConnectivityResult.mobile ||
-        result == ConnectivityResult.wifi ||
-        result == ConnectivityResult.ethernet
-      );
+      final result = await connectivity_plus.Connectivity().checkConnectivity();
+      state = result == connectivity_plus.ConnectivityResult.mobile ||
+          result == connectivity_plus.ConnectivityResult.wifi ||
+          result == connectivity_plus.ConnectivityResult.ethernet;
     } catch (e) {
       state = false;
     }
   }
 }
-
-// Alias for connectivity_plus
-typedef ConnectivityPlus = connectivity_plus.Connectivity;

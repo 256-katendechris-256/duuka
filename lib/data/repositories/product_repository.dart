@@ -178,7 +178,7 @@ class ProductRepository {
           .isActiveEqualTo(true)
           .findAll();
 
-      return products.fold(0.0, (sum, product) => sum + product.stockValue);
+      return products.fold<double>(0.0, (double sum, product) => sum + product.stockValue);
     } catch (e) {
       throw Exception('Failed to get total value: $e');
     }

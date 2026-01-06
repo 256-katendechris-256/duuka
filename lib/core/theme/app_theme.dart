@@ -246,8 +246,8 @@ class DuukaTheme {
   }
 
   // Card Theme
-  static CardTheme get _cardTheme {
-    return CardTheme(
+  static CardThemeData get _cardTheme {
+    return CardThemeData(
       elevation: 0,
       color: DuukaColors.cardBg,
       surfaceTintColor: Colors.transparent,
@@ -518,8 +518,8 @@ class DuukaTheme {
   }
 
   // Dialog Theme
-  static DialogTheme get _dialogTheme {
-    return DialogTheme(
+  static DialogThemeData get _dialogTheme {
+    return DialogThemeData(
       elevation: 3,
       backgroundColor: DuukaColors.surface,
       surfaceTintColor: Colors.transparent,
@@ -658,8 +658,8 @@ class DuukaTheme {
   }
 
   // Tab Bar Theme
-  static TabBarTheme get _tabBarTheme {
-    return TabBarTheme(
+  static TabBarThemeData get _tabBarTheme {
+    return TabBarThemeData(
       labelColor: DuukaColors.primary,
       unselectedLabelColor: DuukaColors.textSecondary,
       labelStyle: TextStyle(

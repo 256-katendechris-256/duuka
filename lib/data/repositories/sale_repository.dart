@@ -73,7 +73,7 @@ class SaleRepository {
   Future<double> getTodayTotal() async {
     try {
       final sales = await getToday();
-      return sales.fold(0.0, (sum, sale) => sum + sale.total);
+      return sales.fold<double>(0.0, (double sum, sale) => sum + sale.total);
     } catch (e) {
       throw Exception('Failed to get today\'s total: $e');
     }
@@ -93,7 +93,7 @@ class SaleRepository {
   Future<double> getTodayProfit() async {
     try {
       final sales = await getToday();
-      return sales.fold(0.0, (sum, sale) => sum + sale.totalProfit);
+      return sales.fold<double>(0.0, (double sum, sale) => sum + sale.totalProfit);
     } catch (e) {
       throw Exception('Failed to get today\'s profit: $e');
     }

@@ -12,11 +12,11 @@ class BusinessRepository {
       // Try to get from preferences first
       final businessId = PreferencesService.businessId;
       if (businessId != null) {
-        return await _isar.businesses.get(businessId);
+        return await _isar.business.get(businessId);
       }
 
       // Otherwise get first business
-      return await _isar.businesses.where().findFirst();
+      return await _isar.business.where().findFirst();
     } catch (e) {
       throw Exception('Failed to fetch business: $e');
     }
@@ -30,7 +30,7 @@ class BusinessRepository {
       business.updatedAt = now;
 
       return await _isar.writeTxn(() async {
-        final id = await _isar.businesses.put(business);
+        final id = await _isar.business.put(business);
 
         // Save to preferences
         await PreferencesService.setBusinessId(id);
@@ -51,7 +51,7 @@ class BusinessRepository {
       business.updatedAt = DateTime.now();
 
       await _isar.writeTxn(() async {
-        await _isar.businesses.put(business);
+        await _isar.business.put(business);
 
         // Queue for sync
         await _queueForSync(SyncOperation.update, business.id);
@@ -64,7 +64,7 @@ class BusinessRepository {
   /// Check if business exists
   Future<bool> exists() async {
     try {
-      final count = await _isar.businesses.count();
+      final count = await _isar.business.count();
       return count > 0;
     } catch (e) {
       throw Exception('Failed to check business existence: $e');

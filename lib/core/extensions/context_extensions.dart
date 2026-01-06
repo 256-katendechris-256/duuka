@@ -15,8 +15,8 @@ extension ContextExtensions on BuildContext {
   EdgeInsets get padding => MediaQuery.of(this).padding;
   EdgeInsets get viewInsets => MediaQuery.of(this).viewInsets;
 
-  // Navigation
-  void pop<T>([T? result]) => Navigator.of(this).pop(result);
+  // Navigation (use go_router's context.pop() instead for routing)
+  void navigatorPop<T>([T? result]) => Navigator.of(this).pop(result);
   bool get canPop => Navigator.of(this).canPop();
 
   // Snackbar
