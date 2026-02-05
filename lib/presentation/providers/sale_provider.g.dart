@@ -184,7 +184,134 @@ class _RecentSalesProviderElement
   int get limit => (origin as RecentSalesProvider).limit;
 }
 
-String _$todayStatsHash() => r'bc1b276e274ee357b2fe7231ac11568c6999718f';
+String _$saleByIdHash() => r'129bef53e47daca13001b2072a4553260803eabd';
+
+/// See also [saleById].
+@ProviderFor(saleById)
+const saleByIdProvider = SaleByIdFamily();
+
+/// See also [saleById].
+class SaleByIdFamily extends Family<AsyncValue<Sale?>> {
+  /// See also [saleById].
+  const SaleByIdFamily();
+
+  /// See also [saleById].
+  SaleByIdProvider call(
+    int id,
+  ) {
+    return SaleByIdProvider(
+      id,
+    );
+  }
+
+  @override
+  SaleByIdProvider getProviderOverride(
+    covariant SaleByIdProvider provider,
+  ) {
+    return call(
+      provider.id,
+    );
+  }
+
+  static const Iterable<ProviderOrFamily>? _dependencies = null;
+
+  @override
+  Iterable<ProviderOrFamily>? get dependencies => _dependencies;
+
+  static const Iterable<ProviderOrFamily>? _allTransitiveDependencies = null;
+
+  @override
+  Iterable<ProviderOrFamily>? get allTransitiveDependencies =>
+      _allTransitiveDependencies;
+
+  @override
+  String? get name => r'saleByIdProvider';
+}
+
+/// See also [saleById].
+class SaleByIdProvider extends AutoDisposeFutureProvider<Sale?> {
+  /// See also [saleById].
+  SaleByIdProvider(
+    int id,
+  ) : this._internal(
+          (ref) => saleById(
+            ref as SaleByIdRef,
+            id,
+          ),
+          from: saleByIdProvider,
+          name: r'saleByIdProvider',
+          debugGetCreateSourceHash:
+              const bool.fromEnvironment('dart.vm.product')
+                  ? null
+                  : _$saleByIdHash,
+          dependencies: SaleByIdFamily._dependencies,
+          allTransitiveDependencies: SaleByIdFamily._allTransitiveDependencies,
+          id: id,
+        );
+
+  SaleByIdProvider._internal(
+    super._createNotifier, {
+    required super.name,
+    required super.dependencies,
+    required super.allTransitiveDependencies,
+    required super.debugGetCreateSourceHash,
+    required super.from,
+    required this.id,
+  }) : super.internal();
+
+  final int id;
+
+  @override
+  Override overrideWith(
+    FutureOr<Sale?> Function(SaleByIdRef provider) create,
+  ) {
+    return ProviderOverride(
+      origin: this,
+      override: SaleByIdProvider._internal(
+        (ref) => create(ref as SaleByIdRef),
+        from: from,
+        name: null,
+        dependencies: null,
+        allTransitiveDependencies: null,
+        debugGetCreateSourceHash: null,
+        id: id,
+      ),
+    );
+  }
+
+  @override
+  AutoDisposeFutureProviderElement<Sale?> createElement() {
+    return _SaleByIdProviderElement(this);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is SaleByIdProvider && other.id == id;
+  }
+
+  @override
+  int get hashCode {
+    var hash = _SystemHash.combine(0, runtimeType.hashCode);
+    hash = _SystemHash.combine(hash, id.hashCode);
+
+    return _SystemHash.finish(hash);
+  }
+}
+
+mixin SaleByIdRef on AutoDisposeFutureProviderRef<Sale?> {
+  /// The parameter `id` of this provider.
+  int get id;
+}
+
+class _SaleByIdProviderElement extends AutoDisposeFutureProviderElement<Sale?>
+    with SaleByIdRef {
+  _SaleByIdProviderElement(super.provider);
+
+  @override
+  int get id => (origin as SaleByIdProvider).id;
+}
+
+String _$todayStatsHash() => r'9f11c542cd5fec258df42bbfbf861929ab629c20';
 
 /// See also [todayStats].
 @ProviderFor(todayStats)
@@ -228,7 +355,7 @@ final salesProvider =
 );
 
 typedef _$Sales = AutoDisposeAsyncNotifier<List<Sale>>;
-String _$cartHash() => r'c0e3e0ba82d73ceaf122360e30bf777a62712931';
+String _$cartHash() => r'ce39eecb54d26f87f18c10d479c2e4dc3f5f4daf';
 
 /// See also [Cart].
 @ProviderFor(Cart)

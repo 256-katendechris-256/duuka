@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 
 /// Custom app bar with optional back button and actions
 class DuukaAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
+  final Widget? titleWidget;
   final bool showBackButton;
   final List<Widget>? actions;
   final bool transparent;
@@ -13,6 +15,7 @@ class DuukaAppBar extends StatelessWidget implements PreferredSizeWidget {
   const DuukaAppBar({
     Key? key,
     required this.title,
+    this.titleWidget,
     this.showBackButton = true,
     this.actions,
     this.transparent = false,
@@ -22,7 +25,7 @@ class DuukaAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      title: Text(
+      title: titleWidget ?? Text(
         title,
         style: TextStyle(
           fontSize: 20.sp,
@@ -41,7 +44,11 @@ class DuukaAppBar extends StatelessWidget implements PreferredSizeWidget {
                 size: 24.sp,
                 color: transparent ? Colors.white : DuukaColors.textPrimary,
               ),
-              onPressed: onBackPressed ?? () => Navigator.of(context).pop(),
+              onPressed: onBackPressed ?? () {
+                if (context.canPop()) {
+                  context.pop();
+                }
+              },
             )
           : null,
       actions: actions,

@@ -43,20 +43,54 @@ class Sale {
   String? remoteId;
 
   // Computed properties
-  int get itemCount => items.fold(0, (sum, item) => sum + item.quantity);
+  int get itemCount => items.length;  // Number of distinct items
+  double get totalQuantity => items.fold(0.0, (sum, item) => sum + item.quantity);
   double get totalProfit => items.fold(0.0, (sum, item) => sum + item.profit);
+}
+
+/// Sale item specification (snapshot at time of sale)
+@embedded
+class SaleItemSpecification {
+  late String name;
+  late String value;
+
+  SaleItemSpecification();
+
+  SaleItemSpecification.create({required this.name, required this.value});
 }
 
 @embedded
 class SaleItem {
   late int productId;
   late String productName;
-  late int quantity;
+  late double quantity;  // Now double to support measurable products (e.g., 0.5 kg)
   late double unitPrice;
   late double costPrice;
   late double total;
 
+  // Unit information for display
+  String unit = 'pcs';
+  bool isMeasurable = false;
+
+  // Product specifications at time of sale
+  List<SaleItemSpecification> specifications = [];
+
   double get profit => (unitPrice - costPrice) * quantity;
+
+  /// Get specifications as a formatted string for display
+  String get specificationsText {
+    if (specifications.isEmpty) return '';
+    return specifications.map((s) => '${s.name}: ${s.value}').join(', ');
+  }
+  
+  /// Format quantity with unit for display
+  String get formattedQuantity {
+    if (isMeasurable) {
+      return '${quantity.toStringAsFixed(quantity.truncateToDouble() == quantity ? 0 : 2)} $unit';
+    } else {
+      return '${quantity.toInt()} $unit';
+    }
+  }
 }
 
 enum PaymentMethod { cash, mobileMoney, credit }

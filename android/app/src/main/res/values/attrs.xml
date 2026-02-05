@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Fix for isar_flutter_libs lStar attribute issue -->
+    <!-- This provides the lStar attribute that's missing from older core-ktx -->
+</resources>

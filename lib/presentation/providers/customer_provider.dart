@@ -1,52 +1,97 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
-
 import '../../data/models/models.dart';
 import '../../data/repositories/customer_repository.dart';
 
-part 'customer_provider.g.dart';
-
-// Repository Provider
-@riverpod
-CustomerRepository customerRepository(CustomerRepositoryRef ref) {
+final customerRepositoryProvider = Provider<CustomerRepository>((ref) {
   return CustomerRepository();
-}
+});
 
-// Customers Provider
-@riverpod
-class Customers extends _$Customers {
-  @override
-  Future<List<Customer>> build() async {
-    return await _loadCustomers();
+/// All customers provider
+final customersProvider = FutureProvider<List<Customer>>((ref) async {
+  final repository = ref.watch(customerRepositoryProvider);
+  return await repository.getAll();
+});
+
+/// Search customers provider
+final customerSearchProvider = FutureProvider.family<List<Customer>, String>((ref, query) async {
+  final repository = ref.watch(customerRepositoryProvider);
+  return await repository.search(query);
+});
+
+/// Single customer provider
+final customerProvider = FutureProvider.family<Customer?, int>((ref, id) async {
+  final repository = ref.watch(customerRepositoryProvider);
+  return await repository.getById(id);
+});
+
+/// Customer by phone provider
+final customerByPhoneProvider = FutureProvider.family<Customer?, String>((ref, phone) async {
+  final repository = ref.watch(customerRepositoryProvider);
+  return await repository.getByPhone(phone);
+});
+
+/// Customer count provider
+final customerCountProvider = FutureProvider<int>((ref) async {
+  final repository = ref.watch(customerRepositoryProvider);
+  return await repository.getCount();
+});
+
+/// Customer management notifier
+class CustomerNotifier extends StateNotifier<AsyncValue<List<Customer>>> {
+  final CustomerRepository _repository;
+  final Ref _ref;
+
+  CustomerNotifier(this._repository, this._ref) : super(const AsyncValue.loading()) {
+    loadCustomers();
   }
 
-  Future<List<Customer>> _loadCustomers() async {
+  Future<void> loadCustomers() async {
+    state = const AsyncValue.loading();
     try {
-      return await ref.read(customerRepositoryProvider).getAll();
-    } catch (e) {
-      throw Exception('Failed to load customers: $e');
+      final customers = await _repository.getAll();
+      state = AsyncValue.data(customers);
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
     }
   }
 
-  Future<void> refresh() async {
-    state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() => _loadCustomers());
-  }
-
-  Future<bool> addCustomer(Customer customer) async {
+  Future<Customer?> addCustomer({
+    required String name,
+    required String phone,
+    String? location,
+    String? notes,
+  }) async {
     try {
-      await ref.read(customerRepositoryProvider).save(customer);
-      await refresh();
-      return true;
+      // Check if phone already exists
+      final existing = await _repository.getByPhone(phone);
+      if (existing != null) {
+        throw Exception('A customer with this phone number already exists');
+      }
+
+      final customer = Customer.create(
+        name: name,
+        phone: phone,
+        location: location,
+        notes: notes,
+      );
+      
+      final id = await _repository.save(customer);
+      customer.id = id;
+      
+      await loadCustomers();
+      _ref.invalidate(customerCountProvider);
+      
+      return customer;
     } catch (e) {
-      return false;
+      rethrow;
     }
   }
 
   Future<bool> updateCustomer(Customer customer) async {
     try {
-      await ref.read(customerRepositoryProvider).save(customer);
-      await refresh();
+      await _repository.save(customer);
+      await loadCustomers();
+      _ref.invalidate(customerProvider(customer.id));
       return true;
     } catch (e) {
       return false;
@@ -55,120 +100,23 @@ class Customers extends _$Customers {
 
   Future<bool> deleteCustomer(int id) async {
     try {
-      await ref.read(customerRepositoryProvider).delete(id);
-      await refresh();
-      return true;
+      final result = await _repository.delete(id);
+      if (result) {
+        await loadCustomers();
+        _ref.invalidate(customerCountProvider);
+      }
+      return result;
     } catch (e) {
       return false;
     }
   }
 
-  Future<bool> recordPayment(int customerId, double amount) async {
-    try {
-      await ref.read(customerRepositoryProvider).subtractFromBalance(customerId, amount);
-      await refresh();
-      return true;
-    } catch (e) {
-      return false;
-    }
-  }
-
-  Future<bool> recordCreditSale(int customerId, double amount) async {
-    try {
-      final repository = ref.read(customerRepositoryProvider);
-      await repository.addToBalance(customerId, amount);
-      await repository.recordPurchase(customerId, amount);
-      await refresh();
-      return true;
-    } catch (e) {
-      return false;
-    }
+  Future<List<Customer>> search(String query) async {
+    return await _repository.search(query);
   }
 }
 
-// Single Customer Provider
-@riverpod
-Future<Customer?> customer(CustomerRef ref, int id) async {
-  try {
-    return await ref.read(customerRepositoryProvider).getById(id);
-  } catch (e) {
-    return null;
-  }
-}
-
-// Customers with Debt Provider
-@riverpod
-Future<List<Customer>> customersWithDebt(CustomersWithDebtRef ref) async {
-  try {
-    return await ref.read(customerRepositoryProvider).getWithDebt();
-  } catch (e) {
-    return [];
-  }
-}
-
-// Customer Search Provider
-@riverpod
-class CustomerSearch extends _$CustomerSearch {
-  @override
-  Future<List<Customer>> build(String query) async {
-    return await ref.read(customerRepositoryProvider).search(query);
-  }
-
-  Future<void> refresh() async {
-    ref.invalidateSelf();
-  }
-}
-
-// Debt Stats Class
-class DebtStats {
-  final double totalOwed;
-  final double overdueAmount;
-  final int customerCount;
-
-  const DebtStats({
-    required this.totalOwed,
-    required this.overdueAmount,
-    required this.customerCount,
-  });
-
-  DebtStats copyWith({
-    double? totalOwed,
-    double? overdueAmount,
-    int? customerCount,
-  }) {
-    return DebtStats(
-      totalOwed: totalOwed ?? this.totalOwed,
-      overdueAmount: overdueAmount ?? this.overdueAmount,
-      customerCount: customerCount ?? this.customerCount,
-    );
-  }
-}
-
-// Debt Stats Provider
-@riverpod
-Future<DebtStats> debtStats(DebtStatsRef ref) async {
-  try {
-    final repository = ref.read(customerRepositoryProvider);
-
-    final totalOwed = await repository.getTotalDebt();
-    final customersWithDebt = await repository.getWithDebt();
-    final overdueCount = await repository.getOverdueCount();
-
-    // Calculate overdue amount (customers over credit limit)
-    final overdueAmount = customersWithDebt
-        .where((c) => c.isOverLimit)
-        .fold(0.0, (sum, c) => sum + c.balance);
-
-    return DebtStats(
-      totalOwed: totalOwed,
-      overdueAmount: overdueAmount,
-      customerCount: customersWithDebt.length,
-    );
-  } catch (e) {
-    return const DebtStats(
-      totalOwed: 0,
-      overdueAmount: 0,
-      customerCount: 0,
-    );
-  }
-}
+final customerNotifierProvider = StateNotifierProvider<CustomerNotifier, AsyncValue<List<Customer>>>((ref) {
+  final repository = ref.watch(customerRepositoryProvider);
+  return CustomerNotifier(repository, ref);
+});

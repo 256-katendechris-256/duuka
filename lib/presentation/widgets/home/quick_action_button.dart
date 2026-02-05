@@ -22,7 +22,7 @@ class QuickActionButton extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: EdgeInsets.all(16.w),
+        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 12.h),
         decoration: BoxDecoration(
           color: DuukaColors.surface,
           borderRadius: BorderRadius.circular(12.r),
@@ -30,21 +30,22 @@ class QuickActionButton extends StatelessWidget {
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 48.w,
-              height: 48.h,
+              width: 44.w,
+              height: 44.h,
               decoration: BoxDecoration(
                 color: color.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12.r),
               ),
               child: Icon(
                 icon,
-                size: 24.sp,
+                size: 22.sp,
                 color: color,
               ),
             ),
-            SizedBox(height: 12.h),
+            SizedBox(height: 8.h),
             Text(
               label,
               style: TextStyle(
@@ -53,6 +54,8 @@ class QuickActionButton extends StatelessWidget {
                 color: DuukaColors.textPrimary,
               ),
               textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),

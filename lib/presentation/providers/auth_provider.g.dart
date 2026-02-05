@@ -37,11 +37,27 @@ final isOnboardingCompleteProvider = AutoDisposeProvider<bool>.internal(
 );
 
 typedef IsOnboardingCompleteRef = AutoDisposeProviderRef<bool>;
-String _$authHash() => r'2afcffb9783590f3a579e16adffbfd2170710fe9';
+String _$isFullyAuthenticatedHash() =>
+    r'63f98230e3f5b85d856b6b99e920e200456ca78f';
+
+/// See also [isFullyAuthenticated].
+@ProviderFor(isFullyAuthenticated)
+final isFullyAuthenticatedProvider = AutoDisposeProvider<bool>.internal(
+  isFullyAuthenticated,
+  name: r'isFullyAuthenticatedProvider',
+  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+      ? null
+      : _$isFullyAuthenticatedHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+typedef IsFullyAuthenticatedRef = AutoDisposeProviderRef<bool>;
+String _$authHash() => r'bc09527c737851a240939a51e8d19141f5b7bcca';
 
 /// See also [Auth].
 @ProviderFor(Auth)
-final authProvider = AutoDisposeNotifierProvider<Auth, AuthState>.internal(
+final authProvider = NotifierProvider<Auth, AuthState>.internal(
   Auth.new,
   name: r'authProvider',
   debugGetCreateSourceHash:
@@ -50,6 +66,6 @@ final authProvider = AutoDisposeNotifierProvider<Auth, AuthState>.internal(
   allTransitiveDependencies: null,
 );
 
-typedef _$Auth = AutoDisposeNotifier<AuthState>;
+typedef _$Auth = Notifier<AuthState>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

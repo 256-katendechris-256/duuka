@@ -5,7 +5,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../data/datasources/local/preferences_service.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/pin_provider.dart';
 
 /// Splash screen with logo and auth check
 class SplashScreen extends ConsumerStatefulWidget {
@@ -28,18 +30,57 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
     if (!mounted) return;
 
+    // Clear PIN session on app start (user needs to verify PIN each session)
+    await PreferencesService.clearPinSession();
+
+    // Wait a moment for auth state to initialize
+    await Future.delayed(const Duration(milliseconds: 500));
+
+    if (!mounted) return;
+
     // Check auth status
     final authState = ref.read(authProvider);
+    final pinState = ref.read(pinProvider);
     final isOnboardingComplete = ref.read(isOnboardingCompleteProvider);
 
-    if (authState.isAuthenticated) {
-      if (isOnboardingComplete) {
-        context.go('/home');
-      } else {
-        context.go('/onboarding/welcome');
-      }
-    } else {
-      context.go('/login');
+    // Route based on auth and PIN status
+    switch (authState.status) {
+      case AuthStatus.unauthenticated:
+      case AuthStatus.error:
+        context.go('/login');
+        break;
+
+      case AuthStatus.pinRequired:
+        context.go('/pin/login');
+        break;
+
+      case AuthStatus.pinSetupRequired:
+        context.go('/pin/setup');
+        break;
+
+      case AuthStatus.authenticated:
+        // Check PIN status
+        if (!pinState.hasPin) {
+          context.go('/pin/setup');
+        } else if (!pinState.isVerified) {
+          context.go('/pin/login');
+        } else if (!isOnboardingComplete) {
+          context.go('/onboarding/welcome');
+        } else {
+          context.go('/home');
+        }
+        break;
+
+      case AuthStatus.initial:
+      case AuthStatus.loading:
+      case AuthStatus.otpSent:
+      case AuthStatus.otpVerifying:
+        // Still initializing, wait and retry
+        await Future.delayed(const Duration(seconds: 1));
+        if (mounted) {
+          _checkAuthAndNavigate();
+        }
+        break;
     }
   }
 

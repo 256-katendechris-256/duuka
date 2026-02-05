@@ -1,12 +1,16 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:app_links/app_links.dart';
 
 import 'core/theme/app_theme.dart';
 import 'data/datasources/local/database_service.dart';
 import 'data/datasources/local/preferences_service.dart';
+import 'data/datasources/remote/supabase_service.dart';
 import 'routes/app_router.dart';
 
 void main() async {
@@ -35,11 +39,30 @@ void main() async {
   // Initialize Isar database
   await DatabaseService.initialize();
 
-  // TODO: Initialize Firebase when ready
-  // Uncomment and configure when Firebase is set up
-  // await Firebase.initializeApp(
-  //   options: DefaultFirebaseOptions.currentPlatform,
-  // );
+  // Initialize Supabase - credentials must be provided via environment variables
+  // Run with: flutter run --dart-define=SUPABASE_URL=... --dart-define=SUPABASE_ANON_KEY=...
+  // Or create a .env file and use a package like flutter_dotenv
+  const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
+  const supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
+
+  // Google Web Client ID for OAuth - get this from Google Cloud Console
+  const googleWebClientId = String.fromEnvironment('GOOGLE_WEB_CLIENT_ID');
+
+  // Validate required environment variables
+  if (supabaseUrl.isEmpty || supabaseAnonKey.isEmpty) {
+    throw Exception(
+      'Missing required environment variables!\n'
+      'Please provide SUPABASE_URL and SUPABASE_ANON_KEY via --dart-define:\n'
+      'flutter run --dart-define=SUPABASE_URL=your_url --dart-define=SUPABASE_ANON_KEY=your_key',
+    );
+  }
+
+  // Initialize Supabase (primary auth backend)
+  await SupabaseService.initialize(
+    url: supabaseUrl,
+    anonKey: supabaseAnonKey,
+    googleWebClientId: googleWebClientId.isNotEmpty ? googleWebClientId : null,
+  );
 
   // Run the app
   runApp(
@@ -49,13 +72,58 @@ void main() async {
   );
 }
 
-class DuukaApp extends ConsumerWidget {
+class DuukaApp extends ConsumerStatefulWidget {
   const DuukaApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final router = ref.watch(routerProvider);
+  ConsumerState<DuukaApp> createState() => _DuukaAppState();
+}
 
+class _DuukaAppState extends ConsumerState<DuukaApp> {
+  late final GoRouter _router;
+  final AppLinks _appLinks = AppLinks();
+  StreamSubscription<Uri>? _linkSub;
+
+  @override
+  void initState() {
+    super.initState();
+    // Read router once during initialization to prevent rebuilds
+    _router = ref.read(routerProvider);
+
+    // Handle OAuth deep link callbacks (desktop).
+    _initDeepLinks();
+  }
+
+  Future<void> _initDeepLinks() async {
+    // Handle initial link (cold start).
+    try {
+      final initial = await _appLinks.getInitialLink();
+      if (initial != null) {
+        await SupabaseService.handleAuthDeepLink(initial);
+      }
+    } catch (e) {
+      // Don't crash app on link parsing/handling.
+      // The auth flow can still complete via other means.
+    }
+
+    // Handle incoming links (warm).
+    _linkSub = _appLinks.uriLinkStream.listen((uri) async {
+      try {
+        await SupabaseService.handleAuthDeepLink(uri);
+      } catch (_) {
+        // Errors are logged inside SupabaseService.handleAuthDeepLink
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _linkSub?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return ScreenUtilInit(
       designSize: const Size(375, 812), // iPhone 11 Pro dimensions
       minTextAdapt: true,
@@ -65,7 +133,7 @@ class DuukaApp extends ConsumerWidget {
           title: 'Duuka',
           debugShowCheckedModeBanner: false,
           theme: DuukaTheme.lightTheme,
-          routerConfig: router,
+          routerConfig: _router,
         );
       },
     );

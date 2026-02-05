@@ -349,7 +349,7 @@ final inventoryStatsProvider =
 );
 
 typedef InventoryStatsRef = AutoDisposeFutureProviderRef<InventoryStats>;
-String _$productsHash() => r'3ae2c171d6f09b42932b571e6d4f9bf3cbcab3d6';
+String _$productsHash() => r'132e7bc16d706648ab6bc1119105c0181519f3f8';
 
 /// See also [Products].
 @ProviderFor(Products)

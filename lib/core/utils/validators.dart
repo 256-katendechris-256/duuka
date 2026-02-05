@@ -49,7 +49,7 @@ class DuukaValidators {
     return cleaned;
   }
 
-  /// Format phone for Firebase Auth (+256XXXXXXXXX)
+  /// Format phone for authentication (+256XXXXXXXXX)
   static String formatPhoneForAuth(String phone) {
     final normalized = normalizePhone(phone);
     return '+256$normalized';

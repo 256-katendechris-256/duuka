@@ -75,7 +75,7 @@ class BusinessRepository {
   Future<void> _queueForSync(SyncOperation operation, int localId) async {
     final syncQueue = SyncQueue()
       ..operation = operation
-      ..collectionName = 'businesses'
+      ..collectionName = 'business'
       ..localId = localId
       ..status = SyncQueueStatus.pending
       ..createdAt = DateTime.now();

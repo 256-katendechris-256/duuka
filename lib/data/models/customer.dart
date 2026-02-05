@@ -1,5 +1,5 @@
 import 'package:isar/isar.dart';
-import 'product.dart';
+import 'product.dart' show SyncStatus;
 
 part 'customer.g.dart';
 
@@ -7,31 +7,62 @@ part 'customer.g.dart';
 class Customer {
   Id id = Isar.autoIncrement;
 
-  @Index(type: IndexType.value, caseSensitive: false)
+  @Index()
   late String name;
 
-  @Index()
-  String? phone;
+  @Index(unique: true)
+  late String phone;
 
-  String? address;
+  String? location;
   String? notes;
 
-  double creditLimit = 0;
-  double balance = 0;
-
-  DateTime? lastPurchaseDate;
-  double totalPurchases = 0;
-  int purchaseCount = 0;
-
-  @enumerated
-  SyncStatus syncStatus = SyncStatus.pending;
-
+  @Index()
   late DateTime createdAt;
-  late DateTime updatedAt;
 
+  DateTime? lastPurchaseAt;
+
+  /// Total number of purchases
+  int totalPurchases = 0;
+
+  /// Total amount spent (lifetime)
+  double totalSpent = 0.0;
+
+  /// Credit balance (amount owed by customer)
+  double creditBalance = 0.0;
+
+  /// Credit limit for this customer
+  double creditLimit = 0.0;
+
+  /// Remote ID for sync
   String? remoteId;
 
-  // Computed properties
-  bool get hasDebt => balance > 0;
-  bool get isOverLimit => balance > creditLimit && creditLimit > 0;
+  /// Sync status
+  @Enumerated(EnumType.name)
+  SyncStatus syncStatus = SyncStatus.pending;
+
+  Customer();
+
+  Customer.create({
+    required this.name,
+    required this.phone,
+    this.location,
+    this.notes,
+  }) : createdAt = DateTime.now();
+
+  /// Display name with phone
+  String get displayName => '$name ($phone)';
+
+  /// Short display for lists
+  String get shortDisplay => name.length > 20 ? '${name.substring(0, 17)}...' : name;
+
+  /// Outstanding balance (alias for creditBalance)
+  @ignore
+  double get balance => creditBalance;
+
+  /// Check if customer is over their credit limit
+  @ignore
+  bool get isOverLimit => creditLimit > 0 && creditBalance > creditLimit;
+
+  @override
+  String toString() => 'Customer(id: $id, name: $name, phone: $phone)';
 }

@@ -92,28 +92,39 @@ class ProductRepository {
   /// Save product (insert or update)
   Future<int> save(Product product) async {
     try {
+      print('🗄️ ProductRepository.save() called for: ${product.name}');
       final now = DateTime.now();
+      final isNew = product.id == Isar.autoIncrement;
 
-      if (product.id == Isar.autoIncrement) {
+      if (isNew) {
         // New product
         product.createdAt = now;
+        print('   ➕ New product detected (ID: autoIncrement)');
+      } else {
+        print('   ✏️ Updating existing product (ID: ${product.id})');
       }
 
       product.updatedAt = now;
       product.syncStatus = SyncStatus.pending;
 
-      return await _isar.writeTxn(() async {
-        final id = await _isar.products.put(product);
+      print('   📝 Starting database transaction...');
+      final id = await _isar.writeTxn(() async {
+        final savedId = await _isar.products.put(product);
+        print('   💾 Product saved with ID: $savedId');
 
         // Queue for sync
         await _queueForSync(
-          product.id == Isar.autoIncrement ? SyncOperation.create : SyncOperation.update,
-          id,
+          isNew ? SyncOperation.create : SyncOperation.update,
+          savedId,
         );
 
-        return id;
+        return savedId;
       });
+
+      print('   ✅ Transaction completed successfully, ID: $id');
+      return id;
     } catch (e) {
+      print('   ❌ Error saving product: $e');
       throw Exception('Failed to save product: $e');
     }
   }
@@ -139,12 +150,16 @@ class ProductRepository {
   }
 
   /// Update product quantity (add or subtract)
-  Future<void> updateQuantity(int id, int change) async {
+  Future<void> updateQuantity(int id, double change) async {
     try {
       await _isar.writeTxn(() async {
         final product = await _isar.products.get(id);
         if (product != null) {
-          product.quantity += change;
+          product.stockQuantity += change;
+          // Prevent negative stock
+          if (product.stockQuantity < 0) {
+            product.stockQuantity = 0;
+          }
           product.updatedAt = DateTime.now();
           product.syncStatus = SyncStatus.pending;
           await _isar.products.put(product);
@@ -155,6 +170,31 @@ class ProductRepository {
       });
     } catch (e) {
       throw Exception('Failed to update quantity: $e');
+    }
+  }
+
+  /// Fix all products with negative stock by setting them to 0
+  Future<int> fixNegativeStock() async {
+    try {
+      int fixedCount = 0;
+      await _isar.writeTxn(() async {
+        final products = await _isar.products
+            .filter()
+            .isActiveEqualTo(true)
+            .stockQuantityLessThan(0)
+            .findAll();
+        
+        for (final product in products) {
+          product.stockQuantity = 0;
+          product.updatedAt = DateTime.now();
+          product.syncStatus = SyncStatus.pending;
+          await _isar.products.put(product);
+          fixedCount++;
+        }
+      });
+      return fixedCount;
+    } catch (e) {
+      throw Exception('Failed to fix negative stock: $e');
     }
   }
 
@@ -187,10 +227,13 @@ class ProductRepository {
   /// Get distinct categories
   Future<List<String>> getCategories() async {
     try {
+      print('🏷️ ProductRepository.getCategories() called');
       final products = await _isar.products
           .filter()
           .isActiveEqualTo(true)
           .findAll();
+
+      print('   📦 Found ${products.length} active products');
 
       final categories = products
           .where((p) => p.category != null && p.category!.isNotEmpty)
@@ -199,8 +242,10 @@ class ProductRepository {
           .toList();
 
       categories.sort();
+      print('   🏷️ Extracted ${categories.length} unique categories: $categories');
       return categories;
     } catch (e) {
+      print('   ❌ Error getting categories: $e');
       throw Exception('Failed to get categories: $e');
     }
   }

@@ -1,0 +1,16 @@
+Windows Registry Editor Version 5.00
+
+[HKEY_CURRENT_USER\Software\Classes\duuka]
+@="URL:Duuka Protocol"
+"URL Protocol"=""
+
+[HKEY_CURRENT_USER\Software\Classes\duuka\DefaultIcon]
+@="C:\\Users\\DevOps\\Desktop\\duuka\\build\\windows\\x64\\runner\\Debug\\duuka.exe,1"
+
+[HKEY_CURRENT_USER\Software\Classes\duuka\shell]
+
+[HKEY_CURRENT_USER\Software\Classes\duuka\shell\open]
+
+[HKEY_CURRENT_USER\Software\Classes\duuka\shell\open\command]
+@="\\\"C:\\Users\\DevOps\\Desktop\\duuka\\build\\windows\\x64\\runner\\Debug\\duuka.exe\\\" \\\"%1\\\""
+

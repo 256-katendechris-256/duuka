@@ -3,6 +3,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../data/models/models.dart';
 import '../../data/repositories/product_repository.dart';
+import 'report_provider.dart';
 
 part 'product_provider.g.dart';
 
@@ -35,10 +36,14 @@ class Products extends _$Products {
 
   Future<bool> addProduct(Product product) async {
     try {
+      print('🔵 ProductsProvider.addProduct() called');
       await ref.read(productRepositoryProvider).save(product);
+      print('🔵 Save successful, refreshing products list...');
       await refresh();
+      print('🔵 Refresh complete');
       return true;
     } catch (e) {
+      print('🔴 ProductsProvider.addProduct() error: $e');
       return false;
     }
   }
@@ -63,14 +68,31 @@ class Products extends _$Products {
     }
   }
 
-  Future<bool> adjustStock(int id, int change, String reason) async {
+  Future<bool> adjustStock(int id, double change, String reason) async {
     try {
       await ref.read(productRepositoryProvider).updateQuantity(id, change);
       await refresh();
+      _invalidateRelated();
       return true;
     } catch (e) {
       return false;
     }
+  }
+
+  Future<int> fixNegativeStock() async {
+    try {
+      final count = await ref.read(productRepositoryProvider).fixNegativeStock();
+      await refresh();
+      _invalidateRelated();
+      return count;
+    } catch (e) {
+      return 0;
+    }
+  }
+
+  void _invalidateRelated() {
+    ref.invalidate(lowStockProductsProvider);
+    ref.invalidate(productCategoriesProvider);
   }
 }
 

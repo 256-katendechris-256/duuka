@@ -38,7 +38,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     await ref.read(authProvider.notifier).sendOtp(phone);
 
     final authState = ref.read(authProvider);
-    if (authState.verificationId != null) {
+    if (authState.status == AuthStatus.otpSent) {
       if (mounted) {
         context.push('/otp', extra: phone);
       }
@@ -50,15 +50,32 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> _handleGoogleSignIn() async {
-    await ref.read(authProvider.notifier).signInWithGoogle();
+    context.hideKeyboard();
 
-    final authState = ref.read(authProvider);
-    if (authState.isAuthenticated) {
-      if (mounted) {
-        context.go('/onboarding/welcome');
+    final success = await ref.read(authProvider.notifier).signInWithGoogle();
+    print('🔵 LoginScreen: Google sign-in success: $success');
+
+    if (success && mounted) {
+      final authState = ref.read(authProvider);
+      print('🔵 LoginScreen: Auth status: ${authState.status}');
+      print('🔵 LoginScreen: needsPinSetup: ${authState.needsPinSetup}, needsPin: ${authState.needsPin}, isAuthenticated: ${authState.isAuthenticated}');
+
+      if (authState.needsPinSetup) {
+        print('🟢 LoginScreen: Navigating to /pin/setup');
+        context.go('/pin/setup');
+      } else if (authState.needsPin) {
+        print('🟢 LoginScreen: Navigating to /pin/login');
+        context.go('/pin/login');
+      } else if (authState.isAuthenticated) {
+        print('🟢 LoginScreen: Navigating to /home');
+        context.go('/home');
+      } else {
+        print('🔴 LoginScreen: No navigation condition matched!');
       }
-    } else if (authState.error != null) {
-      if (mounted) {
+    } else if (mounted) {
+      final authState = ref.read(authProvider);
+      print('🔴 LoginScreen: Sign-in failed or not mounted. Error: ${authState.error}');
+      if (authState.error != null) {
         context.showErrorSnackBar(authState.error!);
       }
     }
@@ -176,6 +193,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     style: TextStyle(
                       fontSize: 16.sp,
                       fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                SizedBox(height: 24.h),
+
+                // Join Team Button (for invited staff)
+                Center(
+                  child: TextButton.icon(
+                    onPressed: isLoading ? null : () => context.push('/join-team'),
+                    icon: Icon(Icons.group_add, size: 20.sp, color: DuukaColors.primary),
+                    label: Text(
+                      'Have an invitation code? Join a team',
+                      style: TextStyle(
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w500,
+                        color: DuukaColors.primary,
+                      ),
                     ),
                   ),
                 ),

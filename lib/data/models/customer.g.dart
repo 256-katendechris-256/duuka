@@ -17,81 +17,76 @@ const CustomerSchema = CollectionSchema(
   name: r'Customer',
   id: -7623823084711604343,
   properties: {
-    r'address': PropertySchema(
-      id: 0,
-      name: r'address',
-      type: IsarType.string,
-    ),
-    r'balance': PropertySchema(
-      id: 1,
-      name: r'balance',
-      type: IsarType.double,
-    ),
     r'createdAt': PropertySchema(
-      id: 2,
+      id: 0,
       name: r'createdAt',
       type: IsarType.dateTime,
     ),
+    r'creditBalance': PropertySchema(
+      id: 1,
+      name: r'creditBalance',
+      type: IsarType.double,
+    ),
     r'creditLimit': PropertySchema(
-      id: 3,
+      id: 2,
       name: r'creditLimit',
       type: IsarType.double,
     ),
-    r'hasDebt': PropertySchema(
+    r'displayName': PropertySchema(
+      id: 3,
+      name: r'displayName',
+      type: IsarType.string,
+    ),
+    r'lastPurchaseAt': PropertySchema(
       id: 4,
-      name: r'hasDebt',
-      type: IsarType.bool,
-    ),
-    r'isOverLimit': PropertySchema(
-      id: 5,
-      name: r'isOverLimit',
-      type: IsarType.bool,
-    ),
-    r'lastPurchaseDate': PropertySchema(
-      id: 6,
-      name: r'lastPurchaseDate',
+      name: r'lastPurchaseAt',
       type: IsarType.dateTime,
     ),
+    r'location': PropertySchema(
+      id: 5,
+      name: r'location',
+      type: IsarType.string,
+    ),
     r'name': PropertySchema(
-      id: 7,
+      id: 6,
       name: r'name',
       type: IsarType.string,
     ),
     r'notes': PropertySchema(
-      id: 8,
+      id: 7,
       name: r'notes',
       type: IsarType.string,
     ),
     r'phone': PropertySchema(
-      id: 9,
+      id: 8,
       name: r'phone',
       type: IsarType.string,
     ),
-    r'purchaseCount': PropertySchema(
-      id: 10,
-      name: r'purchaseCount',
-      type: IsarType.long,
-    ),
     r'remoteId': PropertySchema(
-      id: 11,
+      id: 9,
       name: r'remoteId',
       type: IsarType.string,
     ),
+    r'shortDisplay': PropertySchema(
+      id: 10,
+      name: r'shortDisplay',
+      type: IsarType.string,
+    ),
     r'syncStatus': PropertySchema(
-      id: 12,
+      id: 11,
       name: r'syncStatus',
-      type: IsarType.byte,
+      type: IsarType.string,
       enumMap: _CustomersyncStatusEnumValueMap,
     ),
     r'totalPurchases': PropertySchema(
-      id: 13,
+      id: 12,
       name: r'totalPurchases',
-      type: IsarType.double,
+      type: IsarType.long,
     ),
-    r'updatedAt': PropertySchema(
-      id: 14,
-      name: r'updatedAt',
-      type: IsarType.dateTime,
+    r'totalSpent': PropertySchema(
+      id: 13,
+      name: r'totalSpent',
+      type: IsarType.double,
     )
   },
   estimateSize: _customerEstimateSize,
@@ -108,21 +103,34 @@ const CustomerSchema = CollectionSchema(
       properties: [
         IndexPropertySchema(
           name: r'name',
-          type: IndexType.value,
-          caseSensitive: false,
+          type: IndexType.hash,
+          caseSensitive: true,
         )
       ],
     ),
     r'phone': IndexSchema(
       id: -6308098324157559207,
       name: r'phone',
-      unique: false,
+      unique: true,
       replace: false,
       properties: [
         IndexPropertySchema(
           name: r'phone',
           type: IndexType.hash,
           caseSensitive: true,
+        )
+      ],
+    ),
+    r'createdAt': IndexSchema(
+      id: -3433535483987302584,
+      name: r'createdAt',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'createdAt',
+          type: IndexType.value,
+          caseSensitive: false,
         )
       ],
     )
@@ -141,8 +149,9 @@ int _customerEstimateSize(
   Map<Type, List<int>> allOffsets,
 ) {
   var bytesCount = offsets.last;
+  bytesCount += 3 + object.displayName.length * 3;
   {
-    final value = object.address;
+    final value = object.location;
     if (value != null) {
       bytesCount += 3 + value.length * 3;
     }
@@ -154,18 +163,15 @@ int _customerEstimateSize(
       bytesCount += 3 + value.length * 3;
     }
   }
-  {
-    final value = object.phone;
-    if (value != null) {
-      bytesCount += 3 + value.length * 3;
-    }
-  }
+  bytesCount += 3 + object.phone.length * 3;
   {
     final value = object.remoteId;
     if (value != null) {
       bytesCount += 3 + value.length * 3;
     }
   }
+  bytesCount += 3 + object.shortDisplay.length * 3;
+  bytesCount += 3 + object.syncStatus.name.length * 3;
   return bytesCount;
 }
 
@@ -175,21 +181,20 @@ void _customerSerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeString(offsets[0], object.address);
-  writer.writeDouble(offsets[1], object.balance);
-  writer.writeDateTime(offsets[2], object.createdAt);
-  writer.writeDouble(offsets[3], object.creditLimit);
-  writer.writeBool(offsets[4], object.hasDebt);
-  writer.writeBool(offsets[5], object.isOverLimit);
-  writer.writeDateTime(offsets[6], object.lastPurchaseDate);
-  writer.writeString(offsets[7], object.name);
-  writer.writeString(offsets[8], object.notes);
-  writer.writeString(offsets[9], object.phone);
-  writer.writeLong(offsets[10], object.purchaseCount);
-  writer.writeString(offsets[11], object.remoteId);
-  writer.writeByte(offsets[12], object.syncStatus.index);
-  writer.writeDouble(offsets[13], object.totalPurchases);
-  writer.writeDateTime(offsets[14], object.updatedAt);
+  writer.writeDateTime(offsets[0], object.createdAt);
+  writer.writeDouble(offsets[1], object.creditBalance);
+  writer.writeDouble(offsets[2], object.creditLimit);
+  writer.writeString(offsets[3], object.displayName);
+  writer.writeDateTime(offsets[4], object.lastPurchaseAt);
+  writer.writeString(offsets[5], object.location);
+  writer.writeString(offsets[6], object.name);
+  writer.writeString(offsets[7], object.notes);
+  writer.writeString(offsets[8], object.phone);
+  writer.writeString(offsets[9], object.remoteId);
+  writer.writeString(offsets[10], object.shortDisplay);
+  writer.writeString(offsets[11], object.syncStatus.name);
+  writer.writeLong(offsets[12], object.totalPurchases);
+  writer.writeDouble(offsets[13], object.totalSpent);
 }
 
 Customer _customerDeserialize(
@@ -199,22 +204,21 @@ Customer _customerDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = Customer();
-  object.address = reader.readStringOrNull(offsets[0]);
-  object.balance = reader.readDouble(offsets[1]);
-  object.createdAt = reader.readDateTime(offsets[2]);
-  object.creditLimit = reader.readDouble(offsets[3]);
+  object.createdAt = reader.readDateTime(offsets[0]);
+  object.creditBalance = reader.readDouble(offsets[1]);
+  object.creditLimit = reader.readDouble(offsets[2]);
   object.id = id;
-  object.lastPurchaseDate = reader.readDateTimeOrNull(offsets[6]);
-  object.name = reader.readString(offsets[7]);
-  object.notes = reader.readStringOrNull(offsets[8]);
-  object.phone = reader.readStringOrNull(offsets[9]);
-  object.purchaseCount = reader.readLong(offsets[10]);
-  object.remoteId = reader.readStringOrNull(offsets[11]);
+  object.lastPurchaseAt = reader.readDateTimeOrNull(offsets[4]);
+  object.location = reader.readStringOrNull(offsets[5]);
+  object.name = reader.readString(offsets[6]);
+  object.notes = reader.readStringOrNull(offsets[7]);
+  object.phone = reader.readString(offsets[8]);
+  object.remoteId = reader.readStringOrNull(offsets[9]);
   object.syncStatus =
-      _CustomersyncStatusValueEnumMap[reader.readByteOrNull(offsets[12])] ??
+      _CustomersyncStatusValueEnumMap[reader.readStringOrNull(offsets[11])] ??
           SyncStatus.synced;
-  object.totalPurchases = reader.readDouble(offsets[13]);
-  object.updatedAt = reader.readDateTime(offsets[14]);
+  object.totalPurchases = reader.readLong(offsets[12]);
+  object.totalSpent = reader.readDouble(offsets[13]);
   return object;
 }
 
@@ -226,50 +230,49 @@ P _customerDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readDateTime(offset)) as P;
     case 1:
       return (reader.readDouble(offset)) as P;
     case 2:
-      return (reader.readDateTime(offset)) as P;
-    case 3:
       return (reader.readDouble(offset)) as P;
-    case 4:
-      return (reader.readBool(offset)) as P;
-    case 5:
-      return (reader.readBool(offset)) as P;
-    case 6:
-      return (reader.readDateTimeOrNull(offset)) as P;
-    case 7:
+    case 3:
       return (reader.readString(offset)) as P;
-    case 8:
+    case 4:
+      return (reader.readDateTimeOrNull(offset)) as P;
+    case 5:
       return (reader.readStringOrNull(offset)) as P;
+    case 6:
+      return (reader.readString(offset)) as P;
+    case 7:
+      return (reader.readStringOrNull(offset)) as P;
+    case 8:
+      return (reader.readString(offset)) as P;
     case 9:
       return (reader.readStringOrNull(offset)) as P;
     case 10:
-      return (reader.readLong(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 11:
-      return (reader.readStringOrNull(offset)) as P;
-    case 12:
-      return (_CustomersyncStatusValueEnumMap[reader.readByteOrNull(offset)] ??
+      return (_CustomersyncStatusValueEnumMap[
+              reader.readStringOrNull(offset)] ??
           SyncStatus.synced) as P;
+    case 12:
+      return (reader.readLong(offset)) as P;
     case 13:
       return (reader.readDouble(offset)) as P;
-    case 14:
-      return (reader.readDateTime(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
 }
 
 const _CustomersyncStatusEnumValueMap = {
-  'synced': 0,
-  'pending': 1,
-  'failed': 2,
+  r'synced': r'synced',
+  r'pending': r'pending',
+  r'failed': r'failed',
 };
 const _CustomersyncStatusValueEnumMap = {
-  0: SyncStatus.synced,
-  1: SyncStatus.pending,
-  2: SyncStatus.failed,
+  r'synced': SyncStatus.synced,
+  r'pending': SyncStatus.pending,
+  r'failed': SyncStatus.failed,
 };
 
 Id _customerGetId(Customer object) {
@@ -284,6 +287,60 @@ void _customerAttach(IsarCollection<dynamic> col, Id id, Customer object) {
   object.id = id;
 }
 
+extension CustomerByIndex on IsarCollection<Customer> {
+  Future<Customer?> getByPhone(String phone) {
+    return getByIndex(r'phone', [phone]);
+  }
+
+  Customer? getByPhoneSync(String phone) {
+    return getByIndexSync(r'phone', [phone]);
+  }
+
+  Future<bool> deleteByPhone(String phone) {
+    return deleteByIndex(r'phone', [phone]);
+  }
+
+  bool deleteByPhoneSync(String phone) {
+    return deleteByIndexSync(r'phone', [phone]);
+  }
+
+  Future<List<Customer?>> getAllByPhone(List<String> phoneValues) {
+    final values = phoneValues.map((e) => [e]).toList();
+    return getAllByIndex(r'phone', values);
+  }
+
+  List<Customer?> getAllByPhoneSync(List<String> phoneValues) {
+    final values = phoneValues.map((e) => [e]).toList();
+    return getAllByIndexSync(r'phone', values);
+  }
+
+  Future<int> deleteAllByPhone(List<String> phoneValues) {
+    final values = phoneValues.map((e) => [e]).toList();
+    return deleteAllByIndex(r'phone', values);
+  }
+
+  int deleteAllByPhoneSync(List<String> phoneValues) {
+    final values = phoneValues.map((e) => [e]).toList();
+    return deleteAllByIndexSync(r'phone', values);
+  }
+
+  Future<Id> putByPhone(Customer object) {
+    return putByIndex(r'phone', object);
+  }
+
+  Id putByPhoneSync(Customer object, {bool saveLinks = true}) {
+    return putByIndexSync(r'phone', object, saveLinks: saveLinks);
+  }
+
+  Future<List<Id>> putAllByPhone(List<Customer> objects) {
+    return putAllByIndex(r'phone', objects);
+  }
+
+  List<Id> putAllByPhoneSync(List<Customer> objects, {bool saveLinks = true}) {
+    return putAllByIndexSync(r'phone', objects, saveLinks: saveLinks);
+  }
+}
+
 extension CustomerQueryWhereSort on QueryBuilder<Customer, Customer, QWhere> {
   QueryBuilder<Customer, Customer, QAfterWhere> anyId() {
     return QueryBuilder.apply(this, (query) {
@@ -291,10 +348,10 @@ extension CustomerQueryWhereSort on QueryBuilder<Customer, Customer, QWhere> {
     });
   }
 
-  QueryBuilder<Customer, Customer, QAfterWhere> anyName() {
+  QueryBuilder<Customer, Customer, QAfterWhere> anyCreatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
-        const IndexWhereClause.any(indexName: r'name'),
+        const IndexWhereClause.any(indexName: r'createdAt'),
       );
     });
   }
@@ -410,119 +467,8 @@ extension CustomerQueryWhere on QueryBuilder<Customer, Customer, QWhereClause> {
     });
   }
 
-  QueryBuilder<Customer, Customer, QAfterWhereClause> nameGreaterThan(
-    String name, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'name',
-        lower: [name],
-        includeLower: include,
-        upper: [],
-      ));
-    });
-  }
-
-  QueryBuilder<Customer, Customer, QAfterWhereClause> nameLessThan(
-    String name, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'name',
-        lower: [],
-        upper: [name],
-        includeUpper: include,
-      ));
-    });
-  }
-
-  QueryBuilder<Customer, Customer, QAfterWhereClause> nameBetween(
-    String lowerName,
-    String upperName, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'name',
-        lower: [lowerName],
-        includeLower: includeLower,
-        upper: [upperName],
-        includeUpper: includeUpper,
-      ));
-    });
-  }
-
-  QueryBuilder<Customer, Customer, QAfterWhereClause> nameStartsWith(
-      String NamePrefix) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'name',
-        lower: [NamePrefix],
-        upper: ['$NamePrefix\u{FFFFF}'],
-      ));
-    });
-  }
-
-  QueryBuilder<Customer, Customer, QAfterWhereClause> nameIsEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'name',
-        value: [''],
-      ));
-    });
-  }
-
-  QueryBuilder<Customer, Customer, QAfterWhereClause> nameIsNotEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      if (query.whereSort == Sort.asc) {
-        return query
-            .addWhereClause(IndexWhereClause.lessThan(
-              indexName: r'name',
-              upper: [''],
-            ))
-            .addWhereClause(IndexWhereClause.greaterThan(
-              indexName: r'name',
-              lower: [''],
-            ));
-      } else {
-        return query
-            .addWhereClause(IndexWhereClause.greaterThan(
-              indexName: r'name',
-              lower: [''],
-            ))
-            .addWhereClause(IndexWhereClause.lessThan(
-              indexName: r'name',
-              upper: [''],
-            ));
-      }
-    });
-  }
-
-  QueryBuilder<Customer, Customer, QAfterWhereClause> phoneIsNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'phone',
-        value: [null],
-      ));
-    });
-  }
-
-  QueryBuilder<Customer, Customer, QAfterWhereClause> phoneIsNotNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.between(
-        indexName: r'phone',
-        lower: [null],
-        includeLower: false,
-        upper: [],
-      ));
-    });
-  }
-
   QueryBuilder<Customer, Customer, QAfterWhereClause> phoneEqualTo(
-      String? phone) {
+      String phone) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IndexWhereClause.equalTo(
         indexName: r'phone',
@@ -532,7 +478,7 @@ extension CustomerQueryWhere on QueryBuilder<Customer, Customer, QWhereClause> {
   }
 
   QueryBuilder<Customer, Customer, QAfterWhereClause> phoneNotEqualTo(
-      String? phone) {
+      String phone) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
@@ -565,218 +511,100 @@ extension CustomerQueryWhere on QueryBuilder<Customer, Customer, QWhereClause> {
       }
     });
   }
+
+  QueryBuilder<Customer, Customer, QAfterWhereClause> createdAtEqualTo(
+      DateTime createdAt) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'createdAt',
+        value: [createdAt],
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterWhereClause> createdAtNotEqualTo(
+      DateTime createdAt) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'createdAt',
+              lower: [],
+              upper: [createdAt],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'createdAt',
+              lower: [createdAt],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'createdAt',
+              lower: [createdAt],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'createdAt',
+              lower: [],
+              upper: [createdAt],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterWhereClause> createdAtGreaterThan(
+    DateTime createdAt, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'createdAt',
+        lower: [createdAt],
+        includeLower: include,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterWhereClause> createdAtLessThan(
+    DateTime createdAt, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'createdAt',
+        lower: [],
+        upper: [createdAt],
+        includeUpper: include,
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterWhereClause> createdAtBetween(
+    DateTime lowerCreatedAt,
+    DateTime upperCreatedAt, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'createdAt',
+        lower: [lowerCreatedAt],
+        includeLower: includeLower,
+        upper: [upperCreatedAt],
+        includeUpper: includeUpper,
+      ));
+    });
+  }
 }
 
 extension CustomerQueryFilter
     on QueryBuilder<Customer, Customer, QFilterCondition> {
-  QueryBuilder<Customer, Customer, QAfterFilterCondition> addressIsNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'address',
-      ));
-    });
-  }
-
-  QueryBuilder<Customer, Customer, QAfterFilterCondition> addressIsNotNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'address',
-      ));
-    });
-  }
-
-  QueryBuilder<Customer, Customer, QAfterFilterCondition> addressEqualTo(
-    String? value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'address',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Customer, Customer, QAfterFilterCondition> addressGreaterThan(
-    String? value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'address',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Customer, Customer, QAfterFilterCondition> addressLessThan(
-    String? value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'address',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Customer, Customer, QAfterFilterCondition> addressBetween(
-    String? lower,
-    String? upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'address',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Customer, Customer, QAfterFilterCondition> addressStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'address',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Customer, Customer, QAfterFilterCondition> addressEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'address',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Customer, Customer, QAfterFilterCondition> addressContains(
-      String value,
-      {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'address',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Customer, Customer, QAfterFilterCondition> addressMatches(
-      String pattern,
-      {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'address',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Customer, Customer, QAfterFilterCondition> addressIsEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'address',
-        value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<Customer, Customer, QAfterFilterCondition> addressIsNotEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'address',
-        value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<Customer, Customer, QAfterFilterCondition> balanceEqualTo(
-    double value, {
-    double epsilon = Query.epsilon,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'balance',
-        value: value,
-        epsilon: epsilon,
-      ));
-    });
-  }
-
-  QueryBuilder<Customer, Customer, QAfterFilterCondition> balanceGreaterThan(
-    double value, {
-    bool include = false,
-    double epsilon = Query.epsilon,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'balance',
-        value: value,
-        epsilon: epsilon,
-      ));
-    });
-  }
-
-  QueryBuilder<Customer, Customer, QAfterFilterCondition> balanceLessThan(
-    double value, {
-    bool include = false,
-    double epsilon = Query.epsilon,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'balance',
-        value: value,
-        epsilon: epsilon,
-      ));
-    });
-  }
-
-  QueryBuilder<Customer, Customer, QAfterFilterCondition> balanceBetween(
-    double lower,
-    double upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-    double epsilon = Query.epsilon,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'balance',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        epsilon: epsilon,
-      ));
-    });
-  }
-
   QueryBuilder<Customer, Customer, QAfterFilterCondition> createdAtEqualTo(
       DateTime value) {
     return QueryBuilder.apply(this, (query) {
@@ -826,6 +654,69 @@ extension CustomerQueryFilter
         includeLower: includeLower,
         upper: upper,
         includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> creditBalanceEqualTo(
+    double value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'creditBalance',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition>
+      creditBalanceGreaterThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'creditBalance',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> creditBalanceLessThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'creditBalance',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> creditBalanceBetween(
+    double lower,
+    double upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'creditBalance',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
       ));
     });
   }
@@ -893,12 +784,134 @@ extension CustomerQueryFilter
     });
   }
 
-  QueryBuilder<Customer, Customer, QAfterFilterCondition> hasDebtEqualTo(
-      bool value) {
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> displayNameEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'hasDebt',
+        property: r'displayName',
         value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition>
+      displayNameGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'displayName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> displayNameLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'displayName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> displayNameBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'displayName',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> displayNameStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'displayName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> displayNameEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'displayName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> displayNameContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'displayName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> displayNameMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'displayName',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> displayNameIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'displayName',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition>
+      displayNameIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'displayName',
+        value: '',
       ));
     });
   }
@@ -955,74 +968,63 @@ extension CustomerQueryFilter
     });
   }
 
-  QueryBuilder<Customer, Customer, QAfterFilterCondition> isOverLimitEqualTo(
-      bool value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'isOverLimit',
-        value: value,
-      ));
-    });
-  }
-
   QueryBuilder<Customer, Customer, QAfterFilterCondition>
-      lastPurchaseDateIsNull() {
+      lastPurchaseAtIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'lastPurchaseDate',
+        property: r'lastPurchaseAt',
       ));
     });
   }
 
   QueryBuilder<Customer, Customer, QAfterFilterCondition>
-      lastPurchaseDateIsNotNull() {
+      lastPurchaseAtIsNotNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'lastPurchaseDate',
+        property: r'lastPurchaseAt',
       ));
     });
   }
 
-  QueryBuilder<Customer, Customer, QAfterFilterCondition>
-      lastPurchaseDateEqualTo(DateTime? value) {
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> lastPurchaseAtEqualTo(
+      DateTime? value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'lastPurchaseDate',
+        property: r'lastPurchaseAt',
         value: value,
       ));
     });
   }
 
   QueryBuilder<Customer, Customer, QAfterFilterCondition>
-      lastPurchaseDateGreaterThan(
+      lastPurchaseAtGreaterThan(
     DateTime? value, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         include: include,
-        property: r'lastPurchaseDate',
+        property: r'lastPurchaseAt',
         value: value,
       ));
     });
   }
 
   QueryBuilder<Customer, Customer, QAfterFilterCondition>
-      lastPurchaseDateLessThan(
+      lastPurchaseAtLessThan(
     DateTime? value, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.lessThan(
         include: include,
-        property: r'lastPurchaseDate',
+        property: r'lastPurchaseAt',
         value: value,
       ));
     });
   }
 
-  QueryBuilder<Customer, Customer, QAfterFilterCondition>
-      lastPurchaseDateBetween(
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> lastPurchaseAtBetween(
     DateTime? lower,
     DateTime? upper, {
     bool includeLower = true,
@@ -1030,11 +1032,157 @@ extension CustomerQueryFilter
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
-        property: r'lastPurchaseDate',
+        property: r'lastPurchaseAt',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
         includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> locationIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'location',
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> locationIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'location',
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> locationEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'location',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> locationGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'location',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> locationLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'location',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> locationBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'location',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> locationStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'location',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> locationEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'location',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> locationContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'location',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> locationMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'location',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> locationIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'location',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> locationIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'location',
+        value: '',
       ));
     });
   }
@@ -1315,24 +1463,8 @@ extension CustomerQueryFilter
     });
   }
 
-  QueryBuilder<Customer, Customer, QAfterFilterCondition> phoneIsNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'phone',
-      ));
-    });
-  }
-
-  QueryBuilder<Customer, Customer, QAfterFilterCondition> phoneIsNotNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'phone',
-      ));
-    });
-  }
-
   QueryBuilder<Customer, Customer, QAfterFilterCondition> phoneEqualTo(
-    String? value, {
+    String value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
@@ -1345,7 +1477,7 @@ extension CustomerQueryFilter
   }
 
   QueryBuilder<Customer, Customer, QAfterFilterCondition> phoneGreaterThan(
-    String? value, {
+    String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
@@ -1360,7 +1492,7 @@ extension CustomerQueryFilter
   }
 
   QueryBuilder<Customer, Customer, QAfterFilterCondition> phoneLessThan(
-    String? value, {
+    String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
@@ -1375,8 +1507,8 @@ extension CustomerQueryFilter
   }
 
   QueryBuilder<Customer, Customer, QAfterFilterCondition> phoneBetween(
-    String? lower,
-    String? upper, {
+    String lower,
+    String upper, {
     bool includeLower = true,
     bool includeUpper = true,
     bool caseSensitive = true,
@@ -1457,60 +1589,6 @@ extension CustomerQueryFilter
       return query.addFilterCondition(FilterCondition.greaterThan(
         property: r'phone',
         value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<Customer, Customer, QAfterFilterCondition> purchaseCountEqualTo(
-      int value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'purchaseCount',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<Customer, Customer, QAfterFilterCondition>
-      purchaseCountGreaterThan(
-    int value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'purchaseCount',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<Customer, Customer, QAfterFilterCondition> purchaseCountLessThan(
-    int value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'purchaseCount',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<Customer, Customer, QAfterFilterCondition> purchaseCountBetween(
-    int lower,
-    int upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'purchaseCount',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
       ));
     });
   }
@@ -1661,12 +1739,149 @@ extension CustomerQueryFilter
     });
   }
 
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> shortDisplayEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'shortDisplay',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition>
+      shortDisplayGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'shortDisplay',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> shortDisplayLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'shortDisplay',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> shortDisplayBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'shortDisplay',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition>
+      shortDisplayStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'shortDisplay',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> shortDisplayEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'shortDisplay',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> shortDisplayContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'shortDisplay',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> shortDisplayMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'shortDisplay',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition>
+      shortDisplayIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'shortDisplay',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition>
+      shortDisplayIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'shortDisplay',
+        value: '',
+      ));
+    });
+  }
+
   QueryBuilder<Customer, Customer, QAfterFilterCondition> syncStatusEqualTo(
-      SyncStatus value) {
+    SyncStatus value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'syncStatus',
         value: value,
+        caseSensitive: caseSensitive,
       ));
     });
   }
@@ -1674,12 +1889,14 @@ extension CustomerQueryFilter
   QueryBuilder<Customer, Customer, QAfterFilterCondition> syncStatusGreaterThan(
     SyncStatus value, {
     bool include = false,
+    bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         include: include,
         property: r'syncStatus',
         value: value,
+        caseSensitive: caseSensitive,
       ));
     });
   }
@@ -1687,12 +1904,14 @@ extension CustomerQueryFilter
   QueryBuilder<Customer, Customer, QAfterFilterCondition> syncStatusLessThan(
     SyncStatus value, {
     bool include = false,
+    bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.lessThan(
         include: include,
         property: r'syncStatus',
         value: value,
+        caseSensitive: caseSensitive,
       ));
     });
   }
@@ -1702,6 +1921,7 @@ extension CustomerQueryFilter
     SyncStatus upper, {
     bool includeLower = true,
     bool includeUpper = true,
+    bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
@@ -1710,25 +1930,149 @@ extension CustomerQueryFilter
         includeLower: includeLower,
         upper: upper,
         includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> syncStatusStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'syncStatus',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> syncStatusEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'syncStatus',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> syncStatusContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'syncStatus',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> syncStatusMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'syncStatus',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> syncStatusIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'syncStatus',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition>
+      syncStatusIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'syncStatus',
+        value: '',
       ));
     });
   }
 
   QueryBuilder<Customer, Customer, QAfterFilterCondition> totalPurchasesEqualTo(
-    double value, {
-    double epsilon = Query.epsilon,
-  }) {
+      int value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'totalPurchases',
         value: value,
-        epsilon: epsilon,
       ));
     });
   }
 
   QueryBuilder<Customer, Customer, QAfterFilterCondition>
       totalPurchasesGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'totalPurchases',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition>
+      totalPurchasesLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'totalPurchases',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> totalPurchasesBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'totalPurchases',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> totalSpentEqualTo(
+    double value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'totalSpent',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> totalSpentGreaterThan(
     double value, {
     bool include = false,
     double epsilon = Query.epsilon,
@@ -1736,15 +2080,14 @@ extension CustomerQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         include: include,
-        property: r'totalPurchases',
+        property: r'totalSpent',
         value: value,
         epsilon: epsilon,
       ));
     });
   }
 
-  QueryBuilder<Customer, Customer, QAfterFilterCondition>
-      totalPurchasesLessThan(
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> totalSpentLessThan(
     double value, {
     bool include = false,
     double epsilon = Query.epsilon,
@@ -1752,14 +2095,14 @@ extension CustomerQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.lessThan(
         include: include,
-        property: r'totalPurchases',
+        property: r'totalSpent',
         value: value,
         epsilon: epsilon,
       ));
     });
   }
 
-  QueryBuilder<Customer, Customer, QAfterFilterCondition> totalPurchasesBetween(
+  QueryBuilder<Customer, Customer, QAfterFilterCondition> totalSpentBetween(
     double lower,
     double upper, {
     bool includeLower = true,
@@ -1768,65 +2111,12 @@ extension CustomerQueryFilter
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
-        property: r'totalPurchases',
+        property: r'totalSpent',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
         includeUpper: includeUpper,
         epsilon: epsilon,
-      ));
-    });
-  }
-
-  QueryBuilder<Customer, Customer, QAfterFilterCondition> updatedAtEqualTo(
-      DateTime value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'updatedAt',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<Customer, Customer, QAfterFilterCondition> updatedAtGreaterThan(
-    DateTime value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'updatedAt',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<Customer, Customer, QAfterFilterCondition> updatedAtLessThan(
-    DateTime value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'updatedAt',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<Customer, Customer, QAfterFilterCondition> updatedAtBetween(
-    DateTime lower,
-    DateTime upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'updatedAt',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
       ));
     });
   }
@@ -1839,30 +2129,6 @@ extension CustomerQueryLinks
     on QueryBuilder<Customer, Customer, QFilterCondition> {}
 
 extension CustomerQuerySortBy on QueryBuilder<Customer, Customer, QSortBy> {
-  QueryBuilder<Customer, Customer, QAfterSortBy> sortByAddress() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'address', Sort.asc);
-    });
-  }
-
-  QueryBuilder<Customer, Customer, QAfterSortBy> sortByAddressDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'address', Sort.desc);
-    });
-  }
-
-  QueryBuilder<Customer, Customer, QAfterSortBy> sortByBalance() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'balance', Sort.asc);
-    });
-  }
-
-  QueryBuilder<Customer, Customer, QAfterSortBy> sortByBalanceDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'balance', Sort.desc);
-    });
-  }
-
   QueryBuilder<Customer, Customer, QAfterSortBy> sortByCreatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'createdAt', Sort.asc);
@@ -1872,6 +2138,18 @@ extension CustomerQuerySortBy on QueryBuilder<Customer, Customer, QSortBy> {
   QueryBuilder<Customer, Customer, QAfterSortBy> sortByCreatedAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'createdAt', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterSortBy> sortByCreditBalance() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'creditBalance', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterSortBy> sortByCreditBalanceDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'creditBalance', Sort.desc);
     });
   }
 
@@ -1887,39 +2165,39 @@ extension CustomerQuerySortBy on QueryBuilder<Customer, Customer, QSortBy> {
     });
   }
 
-  QueryBuilder<Customer, Customer, QAfterSortBy> sortByHasDebt() {
+  QueryBuilder<Customer, Customer, QAfterSortBy> sortByDisplayName() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'hasDebt', Sort.asc);
+      return query.addSortBy(r'displayName', Sort.asc);
     });
   }
 
-  QueryBuilder<Customer, Customer, QAfterSortBy> sortByHasDebtDesc() {
+  QueryBuilder<Customer, Customer, QAfterSortBy> sortByDisplayNameDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'hasDebt', Sort.desc);
+      return query.addSortBy(r'displayName', Sort.desc);
     });
   }
 
-  QueryBuilder<Customer, Customer, QAfterSortBy> sortByIsOverLimit() {
+  QueryBuilder<Customer, Customer, QAfterSortBy> sortByLastPurchaseAt() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'isOverLimit', Sort.asc);
+      return query.addSortBy(r'lastPurchaseAt', Sort.asc);
     });
   }
 
-  QueryBuilder<Customer, Customer, QAfterSortBy> sortByIsOverLimitDesc() {
+  QueryBuilder<Customer, Customer, QAfterSortBy> sortByLastPurchaseAtDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'isOverLimit', Sort.desc);
+      return query.addSortBy(r'lastPurchaseAt', Sort.desc);
     });
   }
 
-  QueryBuilder<Customer, Customer, QAfterSortBy> sortByLastPurchaseDate() {
+  QueryBuilder<Customer, Customer, QAfterSortBy> sortByLocation() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'lastPurchaseDate', Sort.asc);
+      return query.addSortBy(r'location', Sort.asc);
     });
   }
 
-  QueryBuilder<Customer, Customer, QAfterSortBy> sortByLastPurchaseDateDesc() {
+  QueryBuilder<Customer, Customer, QAfterSortBy> sortByLocationDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'lastPurchaseDate', Sort.desc);
+      return query.addSortBy(r'location', Sort.desc);
     });
   }
 
@@ -1959,18 +2237,6 @@ extension CustomerQuerySortBy on QueryBuilder<Customer, Customer, QSortBy> {
     });
   }
 
-  QueryBuilder<Customer, Customer, QAfterSortBy> sortByPurchaseCount() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'purchaseCount', Sort.asc);
-    });
-  }
-
-  QueryBuilder<Customer, Customer, QAfterSortBy> sortByPurchaseCountDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'purchaseCount', Sort.desc);
-    });
-  }
-
   QueryBuilder<Customer, Customer, QAfterSortBy> sortByRemoteId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'remoteId', Sort.asc);
@@ -1980,6 +2246,18 @@ extension CustomerQuerySortBy on QueryBuilder<Customer, Customer, QSortBy> {
   QueryBuilder<Customer, Customer, QAfterSortBy> sortByRemoteIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'remoteId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterSortBy> sortByShortDisplay() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'shortDisplay', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterSortBy> sortByShortDisplayDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'shortDisplay', Sort.desc);
     });
   }
 
@@ -2007,45 +2285,21 @@ extension CustomerQuerySortBy on QueryBuilder<Customer, Customer, QSortBy> {
     });
   }
 
-  QueryBuilder<Customer, Customer, QAfterSortBy> sortByUpdatedAt() {
+  QueryBuilder<Customer, Customer, QAfterSortBy> sortByTotalSpent() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'updatedAt', Sort.asc);
+      return query.addSortBy(r'totalSpent', Sort.asc);
     });
   }
 
-  QueryBuilder<Customer, Customer, QAfterSortBy> sortByUpdatedAtDesc() {
+  QueryBuilder<Customer, Customer, QAfterSortBy> sortByTotalSpentDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'updatedAt', Sort.desc);
+      return query.addSortBy(r'totalSpent', Sort.desc);
     });
   }
 }
 
 extension CustomerQuerySortThenBy
     on QueryBuilder<Customer, Customer, QSortThenBy> {
-  QueryBuilder<Customer, Customer, QAfterSortBy> thenByAddress() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'address', Sort.asc);
-    });
-  }
-
-  QueryBuilder<Customer, Customer, QAfterSortBy> thenByAddressDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'address', Sort.desc);
-    });
-  }
-
-  QueryBuilder<Customer, Customer, QAfterSortBy> thenByBalance() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'balance', Sort.asc);
-    });
-  }
-
-  QueryBuilder<Customer, Customer, QAfterSortBy> thenByBalanceDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'balance', Sort.desc);
-    });
-  }
-
   QueryBuilder<Customer, Customer, QAfterSortBy> thenByCreatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'createdAt', Sort.asc);
@@ -2055,6 +2309,18 @@ extension CustomerQuerySortThenBy
   QueryBuilder<Customer, Customer, QAfterSortBy> thenByCreatedAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'createdAt', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterSortBy> thenByCreditBalance() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'creditBalance', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterSortBy> thenByCreditBalanceDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'creditBalance', Sort.desc);
     });
   }
 
@@ -2070,15 +2336,15 @@ extension CustomerQuerySortThenBy
     });
   }
 
-  QueryBuilder<Customer, Customer, QAfterSortBy> thenByHasDebt() {
+  QueryBuilder<Customer, Customer, QAfterSortBy> thenByDisplayName() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'hasDebt', Sort.asc);
+      return query.addSortBy(r'displayName', Sort.asc);
     });
   }
 
-  QueryBuilder<Customer, Customer, QAfterSortBy> thenByHasDebtDesc() {
+  QueryBuilder<Customer, Customer, QAfterSortBy> thenByDisplayNameDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'hasDebt', Sort.desc);
+      return query.addSortBy(r'displayName', Sort.desc);
     });
   }
 
@@ -2094,27 +2360,27 @@ extension CustomerQuerySortThenBy
     });
   }
 
-  QueryBuilder<Customer, Customer, QAfterSortBy> thenByIsOverLimit() {
+  QueryBuilder<Customer, Customer, QAfterSortBy> thenByLastPurchaseAt() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'isOverLimit', Sort.asc);
+      return query.addSortBy(r'lastPurchaseAt', Sort.asc);
     });
   }
 
-  QueryBuilder<Customer, Customer, QAfterSortBy> thenByIsOverLimitDesc() {
+  QueryBuilder<Customer, Customer, QAfterSortBy> thenByLastPurchaseAtDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'isOverLimit', Sort.desc);
+      return query.addSortBy(r'lastPurchaseAt', Sort.desc);
     });
   }
 
-  QueryBuilder<Customer, Customer, QAfterSortBy> thenByLastPurchaseDate() {
+  QueryBuilder<Customer, Customer, QAfterSortBy> thenByLocation() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'lastPurchaseDate', Sort.asc);
+      return query.addSortBy(r'location', Sort.asc);
     });
   }
 
-  QueryBuilder<Customer, Customer, QAfterSortBy> thenByLastPurchaseDateDesc() {
+  QueryBuilder<Customer, Customer, QAfterSortBy> thenByLocationDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'lastPurchaseDate', Sort.desc);
+      return query.addSortBy(r'location', Sort.desc);
     });
   }
 
@@ -2154,18 +2420,6 @@ extension CustomerQuerySortThenBy
     });
   }
 
-  QueryBuilder<Customer, Customer, QAfterSortBy> thenByPurchaseCount() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'purchaseCount', Sort.asc);
-    });
-  }
-
-  QueryBuilder<Customer, Customer, QAfterSortBy> thenByPurchaseCountDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'purchaseCount', Sort.desc);
-    });
-  }
-
   QueryBuilder<Customer, Customer, QAfterSortBy> thenByRemoteId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'remoteId', Sort.asc);
@@ -2175,6 +2429,18 @@ extension CustomerQuerySortThenBy
   QueryBuilder<Customer, Customer, QAfterSortBy> thenByRemoteIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'remoteId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterSortBy> thenByShortDisplay() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'shortDisplay', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QAfterSortBy> thenByShortDisplayDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'shortDisplay', Sort.desc);
     });
   }
 
@@ -2202,37 +2468,30 @@ extension CustomerQuerySortThenBy
     });
   }
 
-  QueryBuilder<Customer, Customer, QAfterSortBy> thenByUpdatedAt() {
+  QueryBuilder<Customer, Customer, QAfterSortBy> thenByTotalSpent() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'updatedAt', Sort.asc);
+      return query.addSortBy(r'totalSpent', Sort.asc);
     });
   }
 
-  QueryBuilder<Customer, Customer, QAfterSortBy> thenByUpdatedAtDesc() {
+  QueryBuilder<Customer, Customer, QAfterSortBy> thenByTotalSpentDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'updatedAt', Sort.desc);
+      return query.addSortBy(r'totalSpent', Sort.desc);
     });
   }
 }
 
 extension CustomerQueryWhereDistinct
     on QueryBuilder<Customer, Customer, QDistinct> {
-  QueryBuilder<Customer, Customer, QDistinct> distinctByAddress(
-      {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'address', caseSensitive: caseSensitive);
-    });
-  }
-
-  QueryBuilder<Customer, Customer, QDistinct> distinctByBalance() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'balance');
-    });
-  }
-
   QueryBuilder<Customer, Customer, QDistinct> distinctByCreatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'createdAt');
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QDistinct> distinctByCreditBalance() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'creditBalance');
     });
   }
 
@@ -2242,21 +2501,23 @@ extension CustomerQueryWhereDistinct
     });
   }
 
-  QueryBuilder<Customer, Customer, QDistinct> distinctByHasDebt() {
+  QueryBuilder<Customer, Customer, QDistinct> distinctByDisplayName(
+      {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'hasDebt');
+      return query.addDistinctBy(r'displayName', caseSensitive: caseSensitive);
     });
   }
 
-  QueryBuilder<Customer, Customer, QDistinct> distinctByIsOverLimit() {
+  QueryBuilder<Customer, Customer, QDistinct> distinctByLastPurchaseAt() {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'isOverLimit');
+      return query.addDistinctBy(r'lastPurchaseAt');
     });
   }
 
-  QueryBuilder<Customer, Customer, QDistinct> distinctByLastPurchaseDate() {
+  QueryBuilder<Customer, Customer, QDistinct> distinctByLocation(
+      {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'lastPurchaseDate');
+      return query.addDistinctBy(r'location', caseSensitive: caseSensitive);
     });
   }
 
@@ -2281,12 +2542,6 @@ extension CustomerQueryWhereDistinct
     });
   }
 
-  QueryBuilder<Customer, Customer, QDistinct> distinctByPurchaseCount() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'purchaseCount');
-    });
-  }
-
   QueryBuilder<Customer, Customer, QDistinct> distinctByRemoteId(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -2294,9 +2549,17 @@ extension CustomerQueryWhereDistinct
     });
   }
 
-  QueryBuilder<Customer, Customer, QDistinct> distinctBySyncStatus() {
+  QueryBuilder<Customer, Customer, QDistinct> distinctByShortDisplay(
+      {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'syncStatus');
+      return query.addDistinctBy(r'shortDisplay', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<Customer, Customer, QDistinct> distinctBySyncStatus(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'syncStatus', caseSensitive: caseSensitive);
     });
   }
 
@@ -2306,9 +2569,9 @@ extension CustomerQueryWhereDistinct
     });
   }
 
-  QueryBuilder<Customer, Customer, QDistinct> distinctByUpdatedAt() {
+  QueryBuilder<Customer, Customer, QDistinct> distinctByTotalSpent() {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'updatedAt');
+      return query.addDistinctBy(r'totalSpent');
     });
   }
 }
@@ -2321,21 +2584,15 @@ extension CustomerQueryProperty
     });
   }
 
-  QueryBuilder<Customer, String?, QQueryOperations> addressProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'address');
-    });
-  }
-
-  QueryBuilder<Customer, double, QQueryOperations> balanceProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'balance');
-    });
-  }
-
   QueryBuilder<Customer, DateTime, QQueryOperations> createdAtProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'createdAt');
+    });
+  }
+
+  QueryBuilder<Customer, double, QQueryOperations> creditBalanceProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'creditBalance');
     });
   }
 
@@ -2345,22 +2602,21 @@ extension CustomerQueryProperty
     });
   }
 
-  QueryBuilder<Customer, bool, QQueryOperations> hasDebtProperty() {
+  QueryBuilder<Customer, String, QQueryOperations> displayNameProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'hasDebt');
+      return query.addPropertyName(r'displayName');
     });
   }
 
-  QueryBuilder<Customer, bool, QQueryOperations> isOverLimitProperty() {
+  QueryBuilder<Customer, DateTime?, QQueryOperations> lastPurchaseAtProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'isOverLimit');
+      return query.addPropertyName(r'lastPurchaseAt');
     });
   }
 
-  QueryBuilder<Customer, DateTime?, QQueryOperations>
-      lastPurchaseDateProperty() {
+  QueryBuilder<Customer, String?, QQueryOperations> locationProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'lastPurchaseDate');
+      return query.addPropertyName(r'location');
     });
   }
 
@@ -2376,15 +2632,9 @@ extension CustomerQueryProperty
     });
   }
 
-  QueryBuilder<Customer, String?, QQueryOperations> phoneProperty() {
+  QueryBuilder<Customer, String, QQueryOperations> phoneProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'phone');
-    });
-  }
-
-  QueryBuilder<Customer, int, QQueryOperations> purchaseCountProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'purchaseCount');
     });
   }
 
@@ -2394,21 +2644,27 @@ extension CustomerQueryProperty
     });
   }
 
+  QueryBuilder<Customer, String, QQueryOperations> shortDisplayProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'shortDisplay');
+    });
+  }
+
   QueryBuilder<Customer, SyncStatus, QQueryOperations> syncStatusProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'syncStatus');
     });
   }
 
-  QueryBuilder<Customer, double, QQueryOperations> totalPurchasesProperty() {
+  QueryBuilder<Customer, int, QQueryOperations> totalPurchasesProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'totalPurchases');
     });
   }
 
-  QueryBuilder<Customer, DateTime, QQueryOperations> updatedAtProperty() {
+  QueryBuilder<Customer, double, QQueryOperations> totalSpentProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'updatedAt');
+      return query.addPropertyName(r'totalSpent');
     });
   }
 }

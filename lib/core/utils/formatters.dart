@@ -35,6 +35,18 @@ class DuukaFormatters {
     return amount.round().toString();
   }
 
+  /// Format as compact currency with UGX
+  /// Example: 1234567 -> "UGX 1.2M"
+  static String currencyCompact(double amount) {
+    return 'UGX ${currencyShort(amount)}';
+  }
+
+  /// Format date as short (for stats)
+  /// Example: "Jan 10"
+  static String dateShort(DateTime date) {
+    return _shortDateFormat.format(date);
+  }
+
   /// Format as compact number with suffix
   static String compact(int number) {
     if (number >= 1000000) {

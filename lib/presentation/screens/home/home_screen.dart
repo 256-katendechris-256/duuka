@@ -6,25 +6,42 @@ import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../core/utils/formatters.dart';
+import '../../../data/models/models.dart';
 import '../../widgets/home/sales_summary_card.dart';
 import '../../widgets/home/quick_action_button.dart';
 import '../../widgets/home/low_stock_alert.dart';
 import '../../widgets/home/recent_sale_tile.dart';
 import '../../widgets/common/empty_state.dart';
 import '../../widgets/common/sync_status_indicator.dart';
+import '../../providers/auth_provider.dart';
 import '../../providers/sale_provider.dart';
 import '../../providers/product_provider.dart';
 import '../../providers/business_provider.dart';
 
-class HomeScreen extends ConsumerWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  bool _isAmountVisible = false;
+
+  void _toggleAmountVisibility() {
+    setState(() {
+      _isAmountVisible = !_isAmountVisible;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final todayStatsAsync = ref.watch(todayStatsProvider);
     final recentSalesAsync = ref.watch(recentSalesProvider(limit: 5));
     final lowStockAsync = ref.watch(lowStockProductsProvider);
     final businessAsync = ref.watch(businessNotifierProvider);
+    final authState = ref.watch(authProvider);
+    final isOwner = authState.user?.role == UserRole.owner;
 
     return Scaffold(
       backgroundColor: DuukaColors.background,
@@ -140,12 +157,17 @@ class HomeScreen extends ConsumerWidget {
               padding: EdgeInsets.all(24.w),
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
-                  // Sales Summary Card
+                  // Sales Summary Card - Shows Cash at Hand (actual money received)
                   todayStatsAsync.when(
                     data: (stats) => SalesSummaryCard(
-                      amount: stats.total,
-                      percentageChange: 12.5, // TODO: Calculate from yesterday
-                      onTap: () => context.push('/reports'),
+                      amount: stats.cashAtHand,
+                      creditOutstanding: stats.creditOutstanding,
+                      totalSales: stats.total,
+                      refunded: stats.refunded,
+                      percentageChange: stats.percentageChange,
+                      onTap: isOwner ? () => context.push('/reports') : null,
+                      isAmountVisible: _isAmountVisible,
+                      onToggleVisibility: _toggleAmountVisibility,
                     ),
                     loading: () => Container(
                       height: 140.h,
@@ -163,10 +185,10 @@ class HomeScreen extends ConsumerWidget {
                   GridView.count(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    crossAxisCount: 2,
+                    crossAxisCount: 3,
                     mainAxisSpacing: 12.h,
                     crossAxisSpacing: 12.w,
-                    childAspectRatio: 1.5,
+                    childAspectRatio: 1.0,
                     children: [
                       QuickActionButton(
                         icon: Icons.shopping_cart_outlined,
@@ -175,25 +197,37 @@ class HomeScreen extends ConsumerWidget {
                         onTap: () => context.push('/sale'),
                       ),
                       QuickActionButton(
+                        icon: Icons.description_outlined,
+                        label: 'Invoices',
+                        color: DuukaColors.info,
+                        onTap: () => context.push('/invoices'),
+                      ),
+                      QuickActionButton(
                         icon: Icons.inventory_2_outlined,
                         label: DuukaStrings.stockIn,
-                        color: DuukaColors.info,
+                        color: Colors.teal,
                         onTap: () => context.push('/inventory/add'),
                       ),
                       QuickActionButton(
-                        icon: Icons.qr_code_scanner,
-                        label: DuukaStrings.scan,
+                        icon: Icons.receipt_long,
+                        label: 'Expenses',
                         color: DuukaColors.warning,
-                        onTap: () {
-                          // TODO: Open barcode scanner
-                        },
+                        onTap: () => context.push('/expenses'),
                       ),
                       QuickActionButton(
-                        icon: Icons.assessment_outlined,
-                        label: DuukaStrings.reports,
-                        color: Colors.purple,
-                        onTap: () => context.push('/reports'),
+                        icon: Icons.account_balance_wallet_outlined,
+                        label: 'Debtors',
+                        color: Colors.red,
+                        onTap: () => context.push('/debtors'),
                       ),
+                      // Reports - Only visible to owners
+                      if (isOwner)
+                        QuickActionButton(
+                          icon: Icons.assessment_outlined,
+                          label: DuukaStrings.reports,
+                          color: Colors.purple,
+                          onTap: () => context.push('/reports'),
+                        ),
                     ],
                   ),
                   SizedBox(height: 24.h),

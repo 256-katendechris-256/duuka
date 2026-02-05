@@ -15,9 +15,9 @@ extension ContextExtensions on BuildContext {
   EdgeInsets get padding => MediaQuery.of(this).padding;
   EdgeInsets get viewInsets => MediaQuery.of(this).viewInsets;
 
-  // Navigation (use go_router's context.pop() instead for routing)
+  // Navigation - use go_router's context.pop() and context.canPop() for routing
+  // For modal dialogs/bottom sheets, use Navigator.of(this).pop()
   void navigatorPop<T>([T? result]) => Navigator.of(this).pop(result);
-  bool get canPop => Navigator.of(this).canPop();
 
   // Snackbar
   void showSnackBar(String message, {bool isError = false}) {
@@ -61,6 +61,24 @@ extension ContextExtensions on BuildContext {
           ],
         ),
         backgroundColor: colorScheme.error,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
+        margin: EdgeInsets.all(16.w),
+      ),
+    );
+  }
+
+  void showInfoSnackBar(String message) {
+    ScaffoldMessenger.of(this).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(Icons.info_outline, color: Colors.white, size: 20.sp),
+            SizedBox(width: 8.w),
+            Expanded(child: Text(message)),
+          ],
+        ),
+        backgroundColor: const Color(0xFF2196F3),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
         margin: EdgeInsets.all(16.w),
