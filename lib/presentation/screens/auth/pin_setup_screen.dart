@@ -5,6 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/utils/post_auth_navigator.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/pin_provider.dart';
 
@@ -78,13 +79,8 @@ class _PinSetupScreenState extends ConsumerState<PinSetupScreen> {
       // Notify auth provider
       ref.read(authProvider.notifier).onPinSetupComplete();
 
-      // Navigate based on onboarding status
-      final isOnboarded = ref.read(isOnboardingCompleteProvider);
-      if (isOnboarded) {
-        context.go('/home');
-      } else {
-        context.go('/onboarding/welcome');
-      }
+      // Navigate: onboarding → approval → home
+      navigateAfterAuth(context, ref);
     }
   }
 

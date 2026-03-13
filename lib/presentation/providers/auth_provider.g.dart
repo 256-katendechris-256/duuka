@@ -53,7 +53,7 @@ final isFullyAuthenticatedProvider = AutoDisposeProvider<bool>.internal(
 );
 
 typedef IsFullyAuthenticatedRef = AutoDisposeProviderRef<bool>;
-String _$authHash() => r'bc09527c737851a240939a51e8d19141f5b7bcca';
+String _$authHash() => r'387c2d1395592b1d821b152c9066dbb88c151a43';
 
 /// See also [Auth].
 @ProviderFor(Auth)

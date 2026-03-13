@@ -10,6 +10,50 @@ import '../../data/repositories/return_repository.dart';
 import '../../data/datasources/local/database_service.dart';
 
 // ============================================================================
+// HELPERS: Realized revenue/profit (excludes unpaid credit)
+// ============================================================================
+
+/// Calculate realized revenue: cash/mobile in full, credit only when paid
+double _realizedRevenue(List<Sale> sales) {
+  return sales.fold<double>(0, (sum, sale) {
+    if (sale.paymentMethod == PaymentMethod.credit) {
+      if (sale.paymentStatus == PaymentStatus.paid) return sum + sale.total;
+      return sum + sale.amountPaid; // Partial: only count what's been paid
+    }
+    return sum + sale.total;
+  });
+}
+
+/// Calculate realized profit: proportional to amount paid for credit sales
+double _realizedProfit(List<Sale> sales) {
+  return sales.fold<double>(0, (sum, sale) {
+    if (sale.paymentMethod == PaymentMethod.credit) {
+      if (sale.paymentStatus == PaymentStatus.paid) return sum + sale.totalProfit;
+      if (sale.amountPaid > 0 && sale.total > 0) {
+        return sum + (sale.totalProfit * (sale.amountPaid / sale.total));
+      }
+      return sum;
+    }
+    return sum + sale.totalProfit;
+  });
+}
+
+/// Calculate realized cost of goods sold
+double _realizedCost(List<Sale> sales) {
+  return sales.fold<double>(0, (sum, sale) {
+    final cost = sale.total - sale.totalProfit;
+    if (sale.paymentMethod == PaymentMethod.credit) {
+      if (sale.paymentStatus == PaymentStatus.paid) return sum + cost;
+      if (sale.amountPaid > 0 && sale.total > 0) {
+        return sum + (cost * (sale.amountPaid / sale.total));
+      }
+      return sum;
+    }
+    return sum + cost;
+  });
+}
+
+// ============================================================================
 // REPORT DATA CLASSES
 // ============================================================================
 
@@ -232,14 +276,14 @@ final reportSummaryProvider = FutureProvider<ReportSummary>((ref) async {
     );
     final monthSales = await saleRepo.getByDateRange(startOfMonth, endOfToday);
 
-    // Calculate gross totals
-    final todayGrossTotal = todaySales.fold<double>(0, (sum, s) => sum + s.total);
-    final weekGrossTotal = weekSales.fold<double>(0, (sum, s) => sum + s.total);
-    final monthGrossTotal = monthSales.fold<double>(0, (sum, s) => sum + s.total);
+    // Calculate realized totals (exclude unpaid credit)
+    final todayGrossTotal = _realizedRevenue(todaySales);
+    final weekGrossTotal = _realizedRevenue(weekSales);
+    final monthGrossTotal = _realizedRevenue(monthSales);
 
-    final todayProfit = todaySales.fold<double>(0, (sum, s) => sum + s.totalProfit);
-    final weekProfit = weekSales.fold<double>(0, (sum, s) => sum + s.totalProfit);
-    final monthProfit = monthSales.fold<double>(0, (sum, s) => sum + s.totalProfit);
+    final todayProfit = _realizedProfit(todaySales);
+    final weekProfit = _realizedProfit(weekSales);
+    final monthProfit = _realizedProfit(monthSales);
 
     // Get returns/refunds for each period (with error handling)
     List<ProductReturn> allReturns = [];
@@ -324,6 +368,9 @@ final paymentBreakdownProvider = FutureProvider<PaymentMethodBreakdown>((ref) as
   double mobileMoney = 0;
   double credit = 0;
 
+  double creditPaid = 0;
+  double creditOutstanding = 0;
+
   for (final sale in sales) {
     switch (sale.paymentMethod) {
       case PaymentMethod.cash:
@@ -333,16 +380,25 @@ final paymentBreakdownProvider = FutureProvider<PaymentMethodBreakdown>((ref) as
         mobileMoney += sale.total;
         break;
       case PaymentMethod.credit:
-        credit += sale.total;
+        if (sale.paymentStatus == PaymentStatus.paid) {
+          creditPaid += sale.total;
+        } else {
+          creditPaid += sale.amountPaid;
+          creditOutstanding += (sale.total - sale.amountPaid);
+        }
+        credit += sale.total; // Keep total credit for display breakdown
         break;
     }
   }
+
+  // Total realized revenue = cash + mobile + paid portion of credit
+  final realizedTotal = cash + mobileMoney + creditPaid;
 
   return PaymentMethodBreakdown(
     cash: cash,
     mobileMoney: mobileMoney,
     credit: credit,
-    total: cash + mobileMoney + credit,
+    total: realizedTotal,
   );
 });
 
@@ -368,8 +424,8 @@ final dailySalesChartProvider = FutureProvider<List<DailySalesData>>((ref) async
       final endOfDay = DateTime(date.year, date.month, date.day, 23, 59, 59);
 
       final sales = await saleRepo.getByDateRange(startOfDay, endOfDay);
-      final grossTotal = sales.fold<double>(0, (sum, s) => sum + s.total);
-      final grossProfit = sales.fold<double>(0, (sum, s) => sum + s.totalProfit);
+      final grossTotal = _realizedRevenue(sales);
+      final grossProfit = _realizedProfit(sales);
       
       // Subtract refunds for this day
       final dayRefunds = allReturns
@@ -408,25 +464,41 @@ final topProductsProvider = FutureProvider<List<ProductSalesData>>((ref) async {
   final Map<int, ProductSalesData> productMap = {};
 
   for (final sale in sales) {
+    // Determine how much of this sale counts toward realized revenue
+    double revenueFraction = 1.0;
+    if (sale.paymentMethod == PaymentMethod.credit) {
+      if (sale.paymentStatus == PaymentStatus.paid) {
+        revenueFraction = 1.0;
+      } else if (sale.amountPaid > 0 && sale.total > 0) {
+        revenueFraction = sale.amountPaid / sale.total;
+      } else {
+        revenueFraction = 0.0;
+      }
+    }
+
     for (final item in sale.items) {
+      final itemRevenue = item.total * revenueFraction;
+      final itemProfit = item.profit * revenueFraction;
+      final itemQty = item.quantity * revenueFraction;
+
       if (productMap.containsKey(item.productId)) {
         final existing = productMap[item.productId]!;
         productMap[item.productId] = ProductSalesData(
           productId: item.productId,
           productName: item.productName,
           category: '', // Would need to lookup
-          quantitySold: existing.quantitySold + item.quantity,
-          revenue: existing.revenue + item.total,
-          profit: existing.profit + item.profit,
+          quantitySold: existing.quantitySold + itemQty,
+          revenue: existing.revenue + itemRevenue,
+          profit: existing.profit + itemProfit,
         );
       } else {
         productMap[item.productId] = ProductSalesData(
           productId: item.productId,
           productName: item.productName,
           category: '',
-          quantitySold: item.quantity,
-          revenue: item.total,
-          profit: item.profit,
+          quantitySold: itemQty,
+          revenue: itemRevenue,
+          profit: itemProfit,
         );
       }
     }
@@ -475,11 +547,11 @@ final periodTotalsProvider = FutureProvider<Map<String, double>>((ref) async {
         .where((r) => r.createdAt.isAfter(dateRange.start) && r.createdAt.isBefore(dateRange.end.add(const Duration(seconds: 1))))
         .fold<double>(0, (sum, r) => sum + r.refundAmount);
 
-    final grossSales = sales.fold<double>(0, (sum, s) => sum + s.total);
+    final grossSales = _realizedRevenue(sales);
     final totalSales = grossSales - periodRefunds; // Net sales after refunds
     
-    // Calculate gross COGS (before returns)
-    final grossCost = sales.fold<double>(0, (sum, s) => sum + (s.total - s.totalProfit));
+    // Calculate gross COGS (before returns) - only for realized sales
+    final grossCost = _realizedCost(sales);
     
     // Calculate the cost of returned items
     final periodReturns = allReturns

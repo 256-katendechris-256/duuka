@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -39,25 +41,13 @@ void main() async {
   // Initialize Isar database
   await DatabaseService.initialize();
 
-  // Initialize Supabase - credentials must be provided via environment variables
-  // Run with: flutter run --dart-define=SUPABASE_URL=... --dart-define=SUPABASE_ANON_KEY=...
-  // Or create a .env file and use a package like flutter_dotenv
-  const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
-  const supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
+  // Load Supabase config from bundled asset (assets/config/supabase_config.json)
+  final configJson = await rootBundle.loadString('assets/config/supabase_config.json');
+  final config = jsonDecode(configJson) as Map<String, dynamic>;
+  final supabaseUrl = (config['SUPABASE_URL'] as String).trim();
+  final supabaseAnonKey = (config['SUPABASE_ANON_KEY'] as String).trim();
+  final googleWebClientId = ((config['GOOGLE_WEB_CLIENT_ID'] as String?) ?? '').trim();
 
-  // Google Web Client ID for OAuth - get this from Google Cloud Console
-  const googleWebClientId = String.fromEnvironment('GOOGLE_WEB_CLIENT_ID');
-
-  // Validate required environment variables
-  if (supabaseUrl.isEmpty || supabaseAnonKey.isEmpty) {
-    throw Exception(
-      'Missing required environment variables!\n'
-      'Please provide SUPABASE_URL and SUPABASE_ANON_KEY via --dart-define:\n'
-      'flutter run --dart-define=SUPABASE_URL=your_url --dart-define=SUPABASE_ANON_KEY=your_key',
-    );
-  }
-
-  // Initialize Supabase (primary auth backend)
   await SupabaseService.initialize(
     url: supabaseUrl,
     anonKey: supabaseAnonKey,
@@ -95,7 +85,6 @@ class _DuukaAppState extends ConsumerState<DuukaApp> {
   }
 
   Future<void> _initDeepLinks() async {
-    // Handle initial link (cold start).
     try {
       final initial = await _appLinks.getInitialLink();
       if (initial != null) {
@@ -103,16 +92,12 @@ class _DuukaAppState extends ConsumerState<DuukaApp> {
       }
     } catch (e) {
       // Don't crash app on link parsing/handling.
-      // The auth flow can still complete via other means.
     }
 
-    // Handle incoming links (warm).
     _linkSub = _appLinks.uriLinkStream.listen((uri) async {
       try {
         await SupabaseService.handleAuthDeepLink(uri);
-      } catch (_) {
-        // Errors are logged inside SupabaseService.handleAuthDeepLink
-      }
+      } catch (_) {}
     });
   }
 

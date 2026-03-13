@@ -6,6 +6,7 @@ import '../../data/repositories/sale_repository.dart';
 import 'return_provider.dart';
 import 'product_provider.dart';
 import 'report_provider.dart';
+import 'sync_provider.dart';
 
 part 'sale_provider.g.dart';
 
@@ -153,15 +154,19 @@ Future<TodayStats> todayStats(TodayStatsRef ref) async {
     final yesterdayStart = DateTime(now.year, now.month, now.day - 1);
     final yesterdayEnd = DateTime(now.year, now.month, now.day - 1, 23, 59, 59);
     final yesterdaySales = await repository.getByDateRange(yesterdayStart, yesterdayEnd);
-    final yesterdayTotal = yesterdaySales.fold<double>(0.0, (sum, sale) => sum + sale.total);
+    // Yesterday total: only realized revenue (exclude unpaid credit)
+    final yesterdayTotal = yesterdaySales.fold<double>(0.0, (sum, sale) {
+      if (sale.paymentMethod == PaymentMethod.credit) {
+        if (sale.paymentStatus == PaymentStatus.paid) return sum + sale.total;
+        return sum + sale.amountPaid;
+      }
+      return sum + sale.total;
+    });
     // Calculate yesterday's cash at hand (only fully paid sales)
     final yesterdayCashAtHand = yesterdaySales.fold<double>(0.0, (sum, sale) {
       if (sale.paymentMethod == PaymentMethod.credit) {
-        // Only count credit sales that are fully paid
-        if (sale.paymentStatus == PaymentStatus.paid) {
-          return sum + sale.total;
-        }
-        return sum;
+        if (sale.paymentStatus == PaymentStatus.paid) return sum + sale.total;
+        return sum + sale.amountPaid;
       }
       return sum + sale.total;
     });
@@ -588,5 +593,13 @@ class Cart extends _$Cart {
     ref.invalidate(dailySalesChartProvider);
     ref.invalidate(paymentBreakdownProvider);
     ref.invalidate(topProductsProvider);
+
+    // Trigger sync after a short delay (let DB writes finish)
+    Future.delayed(const Duration(seconds: 1), () {
+      try {
+        ref.read(syncProvider.notifier).refresh();
+        ref.read(syncProvider.notifier).sync();
+      } catch (_) {}
+    });
   }
 }

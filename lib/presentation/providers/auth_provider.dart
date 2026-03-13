@@ -23,6 +23,20 @@ AuthRepository authRepository(AuthRepositoryRef ref) {
   return AuthRepository();
 }
 
+/// Current logged-in user (from auth state). Used by invoice and other features.
+final currentUserProvider = Provider<AsyncValue<AppUser?>>((ref) {
+  final auth = ref.watch(authProvider);
+  if (auth.status == AuthStatus.authenticated && auth.user != null) {
+    return AsyncValue.data(auth.user);
+  }
+  if (auth.status == AuthStatus.loading ||
+      auth.status == AuthStatus.otpSent ||
+      auth.status == AuthStatus.otpVerifying) {
+    return const AsyncValue.loading();
+  }
+  return AsyncValue.data(null);
+});
+
 // Auth State
 enum AuthStatus {
   initial,
@@ -33,6 +47,7 @@ enum AuthStatus {
   otpVerifying,
   pinRequired,
   pinSetupRequired,
+  pendingApproval,
   error,
 }
 
@@ -140,8 +155,28 @@ class Auth extends _$Auth {
           return;
         }
 
-        // Check PIN status
-        print('🔍 Local user EXISTS - skipping restore, going to PIN check');
+        // Refresh approval status from remote (user may have been approved since last session)
+        if (user.uid.isNotEmpty && !user.uid.startsWith('local_')) {
+          try {
+            final remoteUser = await _fetchRemoteUser(session.user.id);
+            if (remoteUser != null && !remoteUser.isApproved) {
+              user.isApproved = false;
+              await ref.read(authRepositoryProvider).saveUser(user);
+              print('🔍 User not yet approved (will check at dashboard entry)');
+            }
+            if (remoteUser != null && remoteUser.isApproved && !user.isApproved) {
+              user.isApproved = true;
+              await ref.read(authRepositoryProvider).saveUser(user);
+              print('🟢 User has been approved!');
+            }
+          } catch (e) {
+            print('⚠️ Could not check approval status: $e');
+          }
+        }
+
+        // Let the user proceed to PIN/onboarding/home.
+        // Approval is checked by the splash screen before entering dashboard.
+        print('🔍 Local user EXISTS - going to PIN check');
         await _checkPinAndSetState(user);
         return;
       }
@@ -355,6 +390,18 @@ class Auth extends _$Auth {
       final isar = DatabaseService.instance;
       print('🔵 _handleSignIn: Supabase user ID: ${supabaseUser.id}');
 
+      // ── User-switch detection: clear old data if a different user signs in ──
+      final previousUid = PreferencesService.userId;
+      if (previousUid != null && previousUid != supabaseUser.id) {
+        print('⚠️ _handleSignIn: DIFFERENT USER detected (was: $previousUid, now: ${supabaseUser.id})');
+        print('⚠️ _handleSignIn: Clearing old local data to prevent data leakage...');
+        await PinService.resetPin(); // Clear old user's PIN from secure storage
+        await DatabaseService.clear();
+        await PreferencesService.setOnboardingComplete(false);
+        await PreferencesService.clearAuth();
+        print('✅ _handleSignIn: Old data cleared');
+      }
+
       // Check if user exists locally by uid (not by preferences)
       var user = await isar.appUsers
           .filter()
@@ -396,6 +443,7 @@ class Auth extends _$Auth {
                 supabaseUser.userMetadata?['picture'] as String?
             ..role = UserRole.owner
             ..isActive = true
+            ..isApproved = false // New users require admin approval
             ..createdAt = DateTime.now();
 
           // Save locally
@@ -409,6 +457,9 @@ class Auth extends _$Auth {
         print('🟢 _handleSignIn: User already exists locally, updating preferences');
         await PreferencesService.setUserId(user.uid);
       }
+
+      // Always store current uid for user-switch detection on next sign-in
+      await PreferencesService.setUserId(supabaseUser.id);
 
       // Update last login
       user.lastLoginAt = DateTime.now();
@@ -424,25 +475,48 @@ class Auth extends _$Auth {
             isPrimary: isNewUser,
           );
 
+      // For new users: let them set up PIN and create business first.
+      // Approval will be checked when they try to enter the dashboard.
+      // For existing users: check approval now.
+      if (!user.isApproved && !isNewUser) {
+        print('🟡 _handleSignIn: Existing user pending approval');
+        state = state.copyWith(
+          status: AuthStatus.pendingApproval,
+          user: user,
+          isNewUser: false,
+        );
+        return;
+      }
+
       // Check PIN status
       final hasPin = await PinService.hasPin();
-      print('🔵 _handleSignIn: Has PIN: $hasPin');
+      print('🔵 _handleSignIn: Has PIN: $hasPin, isNewUser: $isNewUser');
 
-      if (!hasPin) {
-        print('🟢 _handleSignIn: Setting status to pinSetupRequired');
-        state = state.copyWith(
-          status: AuthStatus.pinSetupRequired,
-          user: user,
-          isNewUser: isNewUser,
-        );
-      } else {
-        // Mark PIN as verified (just logged in with OTP/Google)
-        await PreferencesService.setPinVerifiedThisSession(true);
-        print('🟢 _handleSignIn: Setting status to authenticated');
+      if (isNewUser) {
+        // New users: set as authenticated → navigateAfterAuth will send
+        // them to onboarding which includes PIN setup as step 5.
+        print('🟢 _handleSignIn: New user → authenticated (onboarding will handle PIN)');
         state = state.copyWith(
           status: AuthStatus.authenticated,
           user: user,
-          isNewUser: isNewUser,
+          isNewUser: true,
+        );
+      } else if (!hasPin) {
+        // Returning user without PIN (was reset on signOut) → PIN setup
+        print('🟢 _handleSignIn: Returning user, no PIN → pinSetupRequired');
+        state = state.copyWith(
+          status: AuthStatus.pinSetupRequired,
+          user: user,
+          isNewUser: false,
+        );
+      } else {
+        // Returning user with existing PIN
+        await PreferencesService.setPinVerifiedThisSession(true);
+        print('🟢 _handleSignIn: Returning user with PIN → authenticated');
+        state = state.copyWith(
+          status: AuthStatus.authenticated,
+          user: user,
+          isNewUser: false,
         );
       }
       print('🟢 _handleSignIn: Final status: ${state.status}');
@@ -475,6 +549,7 @@ class Auth extends _$Auth {
         ..photoUrl = data['photo_url'] as String?
         ..role = _parseRole(data['role'] as String?)
         ..isActive = data['is_active'] as bool? ?? true
+        ..isApproved = data['is_approved'] as bool? ?? true
         ..createdAt = DateTime.parse(data['created_at'] as String)
         ..remoteId = data['id'] as String?;
     } catch (e) {
@@ -492,6 +567,7 @@ class Auth extends _$Auth {
         'email': user.email,
         'role': user.role.name,
         'is_active': user.isActive,
+        'is_approved': false, // New users require admin approval
         'created_at': DateTime.now().toIso8601String(),
         'updated_at': DateTime.now().toIso8601String(),
       };
@@ -1107,6 +1183,14 @@ class Auth extends _$Auth {
     }
   }
 
+  /// Called when admin approves the user from the pending approval screen
+  void onApproved(AppUser user) {
+    state = state.copyWith(
+      status: AuthStatus.authenticated,
+      user: user,
+    );
+  }
+
   Future<void> signOut({bool clearLocalAuth = false}) async {
     final isLocalUser = state.user?.uid?.startsWith('local_') == true;
 
@@ -1118,14 +1202,18 @@ class Auth extends _$Auth {
     }
 
     try {
+      // Clear PIN from secure storage (prevents stale PIN for next user)
+      await PinService.resetPin();
+
       // Clear PIN session
       await ref.read(pinProvider.notifier).clearSession();
 
       // Clear device
       await ref.read(deviceNotifierProvider.notifier).clear();
 
-      // Clear local auth data
-      await ref.read(authRepositoryProvider).logout();
+      // Clear ALL local data (Isar DB + preferences) to prevent data leakage
+      await DatabaseService.clear();
+      await PreferencesService.clearAll();
 
       // Sign out from Supabase
       await SupabaseService.signOut();

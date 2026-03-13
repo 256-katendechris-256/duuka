@@ -22,6 +22,10 @@ class AppUser {
 
   bool isActive = true;
 
+  /// Whether the user has been approved by admin (for new registrations).
+  /// Fetched from remote; default true for backward compatibility.
+  bool isApproved = true;
+
   late DateTime createdAt;
   DateTime? lastLoginAt;
 

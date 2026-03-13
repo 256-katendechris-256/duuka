@@ -9,22 +9,18 @@ enum InvoiceStatus {
   partial,    // Partially paid
   paid,       // Fully paid
   overdue,    // Payment due date passed
-  cancelled;  // Cancelled by merchant
+  cancelled   // Cancelled by merchant
+}
 
+extension InvoiceStatusX on InvoiceStatus {
   String get label {
     switch (this) {
-      case InvoiceStatus.draft:
-        return 'Draft';
-      case InvoiceStatus.sent:
-        return 'Sent';
-      case InvoiceStatus.partial:
-        return 'Partial';
-      case InvoiceStatus.paid:
-        return 'Paid';
-      case InvoiceStatus.overdue:
-        return 'Overdue';
-      case InvoiceStatus.cancelled:
-        return 'Cancelled';
+      case InvoiceStatus.draft: return 'Draft';
+      case InvoiceStatus.sent: return 'Sent';
+      case InvoiceStatus.partial: return 'Partial';
+      case InvoiceStatus.paid: return 'Paid';
+      case InvoiceStatus.overdue: return 'Overdue';
+      case InvoiceStatus.cancelled: return 'Cancelled';
     }
   }
 }
@@ -81,69 +77,36 @@ class Invoice {
   /// When invoice was converted to Sale (if paid)
   DateTime? convertedToSaleAt;
   int? saleId; // Reference to Sale record
-  String? saleReceiptNumber;
-
-  /// When invoice was sent to customer
-  DateTime? sentAt;
-
-  /// When invoice was cancelled
-  DateTime? cancelledAt;
 
   String? remoteId;
 
   // Computed properties
-  @ignore
   int get itemCount => items.length;
-
-  @ignore
   double get totalQuantity => items.fold(0.0, (sum, item) => sum + item.quantity);
-
-  @ignore
-  double get totalProfit => items.fold(0.0, (sum, item) => sum + item.profit);
-
+  
   /// Remaining balance that needs to be paid
-  @ignore
   double get remainingBalance => total - amountPaid;
-
+  
   /// Percentage of invoice paid
-  @ignore
   double get paymentPercentage => total > 0 ? (amountPaid / total) * 100 : 0;
-
+  
   /// Whether invoice is fully paid
-  @ignore
-  bool get isPaid => remainingBalance <= 0 && amountPaid > 0;
-
+  bool get isPaid => remainingBalance <= 0;
+  
   /// Whether invoice is overdue
-  @ignore
-  bool get isOverdue => dueAt != null && dueAt!.isBefore(DateTime.now()) && !isPaid && status != InvoiceStatus.cancelled;
+  bool get isOverdue => dueAt != null && dueAt!.isBefore(DateTime.now()) && !isPaid;
 
-  /// Days until due (negative if overdue)
-  @ignore
-  int get daysUntilDue => dueAt != null ? dueAt!.difference(DateTime.now()).inDays : 0;
+  /// Whether the user can record a payment (sent, partial, or overdue and not cancelled)
+  bool get canRecordPayment =>
+      status != InvoiceStatus.draft &&
+      status != InvoiceStatus.paid &&
+      status != InvoiceStatus.cancelled;
 
-  /// Days overdue (0 if not overdue)
-  @ignore
-  int get daysOverdue => isOverdue && dueAt != null ? DateTime.now().difference(dueAt!).inDays : 0;
+  /// When the invoice was sent to the customer (for sync)
+  DateTime? sentAt;
 
-  /// Can edit (only drafts)
-  @ignore
-  bool get canEdit => status == InvoiceStatus.draft;
-
-  /// Can delete (only drafts)
-  @ignore
-  bool get canDelete => status == InvoiceStatus.draft;
-
-  /// Can send (only drafts)
-  @ignore
-  bool get canSend => status == InvoiceStatus.draft;
-
-  /// Can record payment
-  @ignore
-  bool get canRecordPayment => status != InvoiceStatus.paid && status != InvoiceStatus.cancelled;
-
-  /// Can cancel
-  @ignore
-  bool get canCancel => status != InvoiceStatus.paid && status != InvoiceStatus.cancelled;
+  /// When the invoice was cancelled (for sync)
+  DateTime? cancelledAt;
 
   Invoice();
 
@@ -163,47 +126,9 @@ class Invoice {
     this.dueAt,
     this.notes,
   }) : createdAt = DateTime.now(),
-       issuedAt = DateTime.now(),
        status = InvoiceStatus.draft,
        amountPaid = 0 {
     balance = total;
-  }
-
-  /// Update status based on current state
-  void updateStatus() {
-    if (status == InvoiceStatus.cancelled) return;
-
-    if (remainingBalance <= 0 && amountPaid > 0) {
-      status = InvoiceStatus.paid;
-    } else if (amountPaid > 0 && remainingBalance > 0) {
-      status = InvoiceStatus.partial;
-    } else if (isOverdue && status != InvoiceStatus.draft) {
-      status = InvoiceStatus.overdue;
-    }
-    balance = remainingBalance;
-  }
-
-  /// Mark as sent
-  void markAsSent() {
-    if (status == InvoiceStatus.draft) {
-      status = InvoiceStatus.sent;
-      sentAt = DateTime.now();
-    }
-  }
-
-  /// Cancel the invoice
-  void cancel() {
-    if (canCancel) {
-      status = InvoiceStatus.cancelled;
-      cancelledAt = DateTime.now();
-    }
-  }
-
-  /// Record a payment
-  void recordPayment(InvoicePayment payment) {
-    payments.add(payment);
-    amountPaid += payment.amount;
-    updateStatus();
   }
 
   @override
@@ -237,24 +162,10 @@ class InvoiceItem {
     this.isMeasurable = false,
   }) : total = quantity * unitPrice;
 
-  @ignore
   double get profit => (unitPrice - costPrice) * quantity;
 
-  @ignore
-  String get formattedQuantity {
-    if (isMeasurable) {
-      return '${quantity.toStringAsFixed(quantity.truncateToDouble() == quantity ? 0 : 2)} $unit';
-    } else {
-      return '${quantity.toInt()} $unit';
-    }
-  }
-
-  @ignore
-  bool get hasSpecifications => specifications.isNotEmpty;
-
   /// Get specifications as a formatted string
-  @ignore
-  String get specificationsText {
+  String getSpecificationsDisplay() {
     if (specifications.isEmpty) return '';
     return specifications.map((s) => '${s.name}: ${s.value}').join(', ');
   }

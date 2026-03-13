@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/models/expense.dart';
 import '../../data/repositories/expense_repository.dart';
 import 'report_provider.dart';
+import 'sync_provider.dart';
 
 final expenseRepositoryProvider = Provider<ExpenseRepository>((ref) {
   return ExpenseRepository();
@@ -125,6 +126,14 @@ class ExpenseNotifier extends StateNotifier<AsyncValue<List<Expense>>> {
     _ref.invalidate(reportSummaryProvider);
     _ref.invalidate(periodTotalsProvider);
     _ref.invalidate(expensesByCategoryProvider);
+
+    // Trigger sync
+    Future.delayed(const Duration(seconds: 1), () {
+      try {
+        _ref.read(syncProvider.notifier).refresh();
+        _ref.read(syncProvider.notifier).sync();
+      } catch (_) {}
+    });
   }
 }
 

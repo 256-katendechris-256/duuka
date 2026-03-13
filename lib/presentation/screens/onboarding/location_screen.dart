@@ -44,7 +44,7 @@ class _LocationScreenState extends ConsumerState<LocationScreen> {
     setState(() => _isLoading = false);
 
     if (success && mounted) {
-      context.go('/onboarding/complete');
+      context.go('/onboarding/pin-setup');
     } else if (mounted) {
       context.showErrorSnackBar('Failed to complete setup');
     }

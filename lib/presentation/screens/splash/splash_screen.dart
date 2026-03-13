@@ -58,6 +58,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
         context.go('/pin/setup');
         break;
 
+      case AuthStatus.pendingApproval:
+        context.go('/pending-approval');
+        break;
+
       case AuthStatus.authenticated:
         // Check PIN status
         if (!pinState.hasPin) {
@@ -66,6 +70,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
           context.go('/pin/login');
         } else if (!isOnboardingComplete) {
           context.go('/onboarding/welcome');
+        } else if (authState.user != null && !authState.user!.isApproved) {
+          // Business created but user not yet approved by admin
+          context.go('/pending-approval');
         } else {
           context.go('/home');
         }

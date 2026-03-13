@@ -41,6 +41,31 @@ class _SalesListScreenState extends ConsumerState<SalesListScreen>
 
   final List<String> _filters = ['All', 'Today', 'This Week', 'This Month'];
 
+  /// Realized revenue: only counts paid portions of credit sales
+  static double _realizedRevenue(List<Sale> sales) {
+    return sales.fold<double>(0, (sum, sale) {
+      if (sale.paymentMethod == PaymentMethod.credit) {
+        if (sale.paymentStatus == PaymentStatus.paid) return sum + sale.total;
+        return sum + sale.amountPaid;
+      }
+      return sum + sale.total;
+    });
+  }
+
+  /// Realized profit: proportional to amount paid for credit sales
+  static double _realizedProfit(List<Sale> sales) {
+    return sales.fold<double>(0, (sum, sale) {
+      if (sale.paymentMethod == PaymentMethod.credit) {
+        if (sale.paymentStatus == PaymentStatus.paid) return sum + sale.totalProfit;
+        if (sale.amountPaid > 0 && sale.total > 0) {
+          return sum + (sale.totalProfit * (sale.amountPaid / sale.total));
+        }
+        return sum;
+      }
+      return sum + sale.totalProfit;
+    });
+  }
+
   @override
   void initState() {
     super.initState();
@@ -147,9 +172,9 @@ class _SalesListScreenState extends ConsumerState<SalesListScreen>
       final pdf = pw.Document();
       final businessName = ref.read(businessNotifierProvider).valueOrNull?.name ?? 'My Business';
 
-      // Calculate totals
-      final totalSales = sales.fold<double>(0, (sum, s) => sum + s.total);
-      final totalProfit = sales.fold<double>(0, (sum, s) => sum + s.totalProfit);
+      // Calculate realized totals (exclude unpaid credit)
+      final totalSales = _realizedRevenue(sales);
+      final totalProfit = _realizedProfit(sales);
       final totalBalance = sales.fold<double>(0, (sum, s) => sum + s.balance);
       final paidCount = sales.where((s) => s.paymentStatus == PaymentStatus.paid).length;
       final creditCount = sales.where((s) => s.paymentStatus != PaymentStatus.paid).length;
@@ -455,8 +480,8 @@ class _SalesListScreenState extends ConsumerState<SalesListScreen>
       summarySheet.cell(excel_lib.CellIndex.indexByString('A5')).value = excel_lib.TextCellValue('Total Transactions:');
       summarySheet.cell(excel_lib.CellIndex.indexByString('B5')).value = excel_lib.IntCellValue(sales.length);
 
-      final totalSales = sales.fold<double>(0, (sum, s) => sum + s.total);
-      final totalProfit = sales.fold<double>(0, (sum, s) => sum + s.totalProfit);
+      final totalSales = _realizedRevenue(sales);
+      final totalProfit = _realizedProfit(sales);
       final totalBalance = sales.fold<double>(0, (sum, s) => sum + s.balance);
       final paidCount = sales.where((s) => s.paymentStatus == PaymentStatus.paid).length;
       final creditCount = sales.where((s) => s.paymentStatus != PaymentStatus.paid).length;

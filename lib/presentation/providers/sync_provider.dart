@@ -19,6 +19,8 @@ enum SyncStatusType { synced, syncing, offline, error }
 class SyncState {
   final SyncStatusType status;
   final int pendingCount;
+  final int totalToSync;      // Total items in current sync batch
+  final int syncedInBatch;    // Items synced so far in current batch
   final DateTime? lastSyncTime;
   final String? error;
   final bool isOnline;
@@ -27,6 +29,8 @@ class SyncState {
   const SyncState({
     this.status = SyncStatusType.offline,
     this.pendingCount = 0,
+    this.totalToSync = 0,
+    this.syncedInBatch = 0,
     this.lastSyncTime,
     this.error,
     this.isOnline = false,
@@ -36,6 +40,8 @@ class SyncState {
   SyncState copyWith({
     SyncStatusType? status,
     int? pendingCount,
+    int? totalToSync,
+    int? syncedInBatch,
     DateTime? lastSyncTime,
     String? error,
     bool? isOnline,
@@ -45,6 +51,8 @@ class SyncState {
     return SyncState(
       status: status ?? this.status,
       pendingCount: pendingCount ?? this.pendingCount,
+      totalToSync: totalToSync ?? this.totalToSync,
+      syncedInBatch: syncedInBatch ?? this.syncedInBatch,
       lastSyncTime: lastSyncTime ?? this.lastSyncTime,
       error: clearError ? null : (error ?? this.error),
       isOnline: isOnline ?? this.isOnline,
@@ -56,6 +64,9 @@ class SyncState {
   bool get isSyncing => status == SyncStatusType.syncing;
   bool get hasError => status == SyncStatusType.error;
   bool get hasPending => pendingCount > 0;
+
+  /// Progress percentage (0.0 to 1.0) for the current sync batch
+  double get progress => totalToSync > 0 ? syncedInBatch / totalToSync : 0.0;
 }
 
 // Sync Provider
@@ -329,6 +340,17 @@ class Sync extends _$Sync {
     }
   }
 
+  /// Batch size for processing items in a single sync run.
+  static const int _batchSize = 20;
+
+  /// Maximum consecutive failures before stopping the current run.
+  static const int _maxConsecutiveFailures = 5;
+
+  /// Retry delay between batches to avoid overwhelming the server.
+  static const Duration _batchDelay = Duration(milliseconds: 500);
+
+  int _retryAttempt = 0;
+
   Future<bool> sync() async {
     print('🔄 Sync started...');
 
@@ -355,23 +377,23 @@ class Sync extends _$Sync {
 
     if (state.isSyncing) {
       print('   ⏳ Already syncing, skipping');
-      return false; // Already syncing
+      return false;
     }
 
-    // Check if user is owner - only owners can sync to cloud
+    // Check if user is owner
     final isOwner = await _isOwnerUser();
     if (!isOwner) {
       print('   👤 Non-owner user - sync disabled, working locally');
       state = state.copyWith(
         status: SyncStatusType.synced,
         isLocalOnly: true,
-        pendingCount: 0,  // Don't show pending for non-owners
+        pendingCount: 0,
         clearError: true,
       );
-      return true;  // Return success - local mode is fine
+      return true;
     }
 
-    // Check if Supabase is authenticated (owner must be authenticated)
+    // Check Supabase auth
     print('   🔐 Supabase authenticated: ${SupabaseService.isAuthenticated}');
     if (!SupabaseService.isAuthenticated) {
       print('   ❌ Owner not authenticated with Supabase');
@@ -385,29 +407,17 @@ class Sync extends _$Sync {
     print('   ✅ Online and authenticated, proceeding with sync');
     state = state.copyWith(
       status: SyncStatusType.syncing,
+      syncedInBatch: 0,
+      totalToSync: 0,
       clearError: true,
     );
 
     try {
       final isar = DatabaseService.instance;
 
-      // Get pending and failed items (limit to avoid timeout)
-      final pendingItems = await isar.syncQueues
-          .filter()
-          .statusEqualTo(SyncQueueStatus.pending)
-          .limit(50)
-          .findAll();
-      final failedItems = await isar.syncQueues
-          .filter()
-          .statusEqualTo(SyncQueueStatus.failed)
-          .retryCountLessThan(3)
-          .limit(20)
-          .findAll();
-      final allItems = [...pendingItems, ...failedItems];
-
-      print('   📦 Found ${pendingItems.length} pending, ${failedItems.length} failed items');
-
-      if (allItems.isEmpty) {
+      // Get total pending count
+      final totalPending = await _getPendingCount();
+      if (totalPending == 0) {
         print('   ✅ No items to sync');
         final now = DateTime.now();
         await PreferencesService.setLastSyncTime(now);
@@ -416,93 +426,172 @@ class Sync extends _$Sync {
           pendingCount: 0,
           lastSyncTime: now,
         );
+        _retryAttempt = 0;
         return true;
       }
 
-      // Sort items to process in correct order for foreign key dependencies
-      allItems.sort((a, b) {
-        const order = [
-          'business', 'businesses',  // First: business
-          'devices',                  // Second: devices (depends on user)
-          'invitations',              // Third: invitations (before team_members)
-          'team_members',             // Fourth: team_members (after invitations)
-          'customers',                // Fifth: customers (depends on business)
-          'products',                 // Sixth: products (depends on business)
-          'sales',                    // Seventh: sales (depends on customer, product, user)
-          'invoices',                 // Eighth: invoices (depends on customer, product, user)
-          'credit_transactions',      // Ninth: credit transactions (depends on customer, sale)
-          'credit_payments',          // Tenth: credit payments (depends on customer)
-          'product_returns',          // Eleventh: product returns (depends on sale, product)
-          'expenses',                 // Last: expenses
-        ];
-        final aIndex = order.indexOf(a.collectionName);
-        final bIndex = order.indexOf(b.collectionName);
-        return (aIndex == -1 ? 999 : aIndex).compareTo(bIndex == -1 ? 999 : bIndex);
-      });
+      state = state.copyWith(totalToSync: totalPending, pendingCount: totalPending);
 
-      int successCount = 0;
-      int failCount = 0;
+      int totalSuccess = 0;
+      int totalFail = 0;
+      int batchNumber = 0;
 
-      // Process each item
-      for (final item in allItems) {
-        try {
-          await _syncItem(item, isar);
-          successCount++;
+      // Process in batches until done or hitting too many failures
+      while (true) {
+        batchNumber++;
+        print('   📦 Batch #$batchNumber (processed so far: $totalSuccess ok, $totalFail failed)');
 
-          // Update pending count periodically
-          if (successCount % 10 == 0) {
-            final remaining = await _getPendingCount();
-            state = state.copyWith(pendingCount: remaining);
+        // Fetch next batch
+        final pendingItems = await isar.syncQueues
+            .filter()
+            .statusEqualTo(SyncQueueStatus.pending)
+            .limit(_batchSize)
+            .findAll();
+        final failedItems = await isar.syncQueues
+            .filter()
+            .statusEqualTo(SyncQueueStatus.failed)
+            .retryCountLessThan(3)
+            .limit((_batchSize / 2).ceil())
+            .findAll();
+        final batchItems = [...pendingItems, ...failedItems];
+
+        if (batchItems.isEmpty) break; // Nothing left
+
+        // Sort by dependency order
+        batchItems.sort((a, b) {
+          const order = [
+            'business', 'businesses',
+            'devices',
+            'invitations',
+            'team_members',
+            'customers',
+            'products',
+            'sales',
+            'invoices',
+            'credit_transactions',
+            'credit_payments',
+            'product_returns',
+            'expenses',
+          ];
+          final aIndex = order.indexOf(a.collectionName);
+          final bIndex = order.indexOf(b.collectionName);
+          return (aIndex == -1 ? 999 : aIndex).compareTo(bIndex == -1 ? 999 : bIndex);
+        });
+
+        int batchSuccess = 0;
+        int batchFail = 0;
+        int consecutiveFailures = 0;
+
+        for (final item in batchItems) {
+          // Stop if too many consecutive failures (server might be down)
+          if (consecutiveFailures >= _maxConsecutiveFailures) {
+            print('   ⛔ Too many consecutive failures, pausing sync');
+            break;
           }
-        } catch (e) {
-          failCount++;
-          print('   ❌ Sync failed for ${item.collectionName} (ID: ${item.localId}): $e');
-          await isar.writeTxn(() async {
-            item.status = SyncQueueStatus.failed;
-            item.retryCount++;
-            item.errorMessage = e.toString();
-            await isar.syncQueues.put(item);
-          });
+
+          try {
+            await _syncItem(item, isar);
+            batchSuccess++;
+            totalSuccess++;
+            consecutiveFailures = 0; // Reset on success
+
+            // Update progress
+            state = state.copyWith(
+              syncedInBatch: totalSuccess,
+              pendingCount: totalPending - totalSuccess,
+            );
+          } catch (e) {
+            batchFail++;
+            totalFail++;
+            consecutiveFailures++;
+            print('   ❌ Sync failed for ${item.collectionName} (ID: ${item.localId}): $e');
+
+            try {
+              await isar.writeTxn(() async {
+                item.status = SyncQueueStatus.failed;
+                item.retryCount++;
+                item.errorMessage = e.toString().length > 200
+                    ? e.toString().substring(0, 200)
+                    : e.toString();
+                await isar.syncQueues.put(item);
+              });
+            } catch (dbError) {
+              print('   ⚠️ Could not update failed item status: $dbError');
+            }
+          }
+        }
+
+        print('   📊 Batch #$batchNumber: $batchSuccess ok, $batchFail failed');
+
+        // Stop if this batch had only failures
+        if (batchSuccess == 0 && batchFail > 0) {
+          print('   ⛔ Entire batch failed, stopping sync run');
+          break;
+        }
+
+        // Stop if we hit the consecutive failure limit
+        if (consecutiveFailures >= _maxConsecutiveFailures) break;
+
+        // Delay between batches to avoid overwhelming the server
+        if (batchItems.length >= _batchSize) {
+          await Future.delayed(_batchDelay);
         }
       }
 
-      print('   📊 Sync complete: $successCount success, $failCount failed');
+      print('   📊 Sync run complete: $totalSuccess success, $totalFail failed');
 
-      // Clean up old completed items (keep last 100)
-      await _cleanupCompletedItems(isar);
+      // Clean up old completed items
+      try {
+        await _cleanupCompletedItems(isar);
+      } catch (_) {}
 
       // Update last sync time
       final now = DateTime.now();
       await PreferencesService.setLastSyncTime(now);
 
       // Refresh pending count
-      final pendingCount = await _getPendingCount();
+      final remainingCount = await _getPendingCount();
 
-      // If anything failed, surface error state instead of "syncing" forever
-      final status = failCount > 0
-          ? SyncStatusType.error
-          : (pendingCount > 0 ? SyncStatusType.syncing : SyncStatusType.synced);
-
-      state = state.copyWith(
-        status: status,
-        pendingCount: pendingCount,
-        lastSyncTime: now,
-      );
-
-      // Only auto-retry when nothing failed in this run
-      if (pendingCount > 0 && failCount == 0) {
-        print('   🔄 More items pending, scheduling retry in 2 seconds');
-        Future.delayed(const Duration(seconds: 2), () => sync());
-      } else if (failCount > 0) {
-        print('   ⚠️ Sync finished with failures; manual retry recommended');
+      // Determine final status
+      final SyncStatusType finalStatus;
+      if (totalFail > 0 && totalSuccess == 0) {
+        finalStatus = SyncStatusType.error;
+      } else if (remainingCount > 0 && totalFail > 0) {
+        finalStatus = SyncStatusType.error; // Partial success with failures
+      } else if (remainingCount > 0) {
+        finalStatus = SyncStatusType.syncing; // More to do
+      } else {
+        finalStatus = SyncStatusType.synced;
       }
 
-      return failCount == 0;
+      state = state.copyWith(
+        status: finalStatus,
+        pendingCount: remainingCount,
+        lastSyncTime: now,
+        totalToSync: 0,
+        syncedInBatch: 0,
+        error: totalFail > 0 ? '$totalFail items failed. Tap to retry.' : null,
+        clearError: totalFail == 0,
+      );
+
+      // Auto-retry remaining items if no failures this run (more items were added during sync)
+      if (remainingCount > 0 && totalFail == 0) {
+        _retryAttempt++;
+        final delay = Duration(seconds: _retryAttempt <= 3 ? 2 : (_retryAttempt <= 6 ? 5 : 15));
+        print('   🔄 More items pending, retry #$_retryAttempt in ${delay.inSeconds}s');
+        Future.delayed(delay, () => sync());
+      } else if (totalFail == 0) {
+        _retryAttempt = 0; // Reset on full success
+      }
+
+      return totalFail == 0;
     } catch (e) {
       print('   ❌ Sync error: $e');
       state = state.copyWith(
         status: SyncStatusType.error,
-        error: e.toString(),
+        error: 'Sync error: ${e.toString().length > 100 ? e.toString().substring(0, 100) : e}',
+        totalToSync: 0,
+        syncedInBatch: 0,
       );
       return false;
     }

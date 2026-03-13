@@ -268,7 +268,7 @@ final todayInvoicesProvider = AutoDisposeFutureProvider<List<Invoice>>.internal(
 );
 
 typedef TodayInvoicesRef = AutoDisposeFutureProviderRef<List<Invoice>>;
-String _$invoiceStatsHash() => r'3812d25e1be64e71c2837286cdf1681710a6124c';
+String _$invoiceStatsHash() => r'04925c4af83adc45fe85fa4b49c2779ab7a9ed13';
 
 /// See also [invoiceStats].
 @ProviderFor(invoiceStats)
@@ -410,7 +410,7 @@ class _InvoiceByIdProviderElement
   int get id => (origin as InvoiceByIdProvider).id;
 }
 
-String _$nextInvoiceNumberHash() => r'7338f6ea1f6895f2ccf4f0350fe4177d9a2e708d';
+String _$nextInvoiceNumberHash() => r'3cf445cfba04809b77a2c120968b966743c59746';
 
 /// See also [nextInvoiceNumber].
 @ProviderFor(nextInvoiceNumber)
@@ -425,7 +425,7 @@ final nextInvoiceNumberProvider = AutoDisposeFutureProvider<String>.internal(
 );
 
 typedef NextInvoiceNumberRef = AutoDisposeFutureProviderRef<String>;
-String _$searchInvoicesHash() => r'5e58e6a5d588800031be2e2a7846913cac8d7374';
+String _$searchInvoicesHash() => r'669ab104bde254e04bb2bf3be9815e33e8cde7d4';
 
 /// See also [searchInvoices].
 @ProviderFor(searchInvoices)

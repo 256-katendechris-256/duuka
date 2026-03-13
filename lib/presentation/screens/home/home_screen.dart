@@ -17,6 +17,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/sale_provider.dart';
 import '../../providers/product_provider.dart';
 import '../../providers/business_provider.dart';
+import '../../providers/sync_provider.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -50,6 +51,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ref.invalidate(todayStatsProvider);
           ref.invalidate(recentSalesProvider);
           ref.invalidate(lowStockProductsProvider);
+          // Also trigger sync on pull-to-refresh
+          ref.read(syncProvider.notifier).sync();
         },
         child: CustomScrollView(
           slivers: [
@@ -65,7 +68,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 child: SafeArea(
                   bottom: false,
                   child: Padding(
-                    padding: EdgeInsets.fromLTRB(24.w, 16.h, 24.w, 32.h),
+                    padding: EdgeInsets.fromLTRB(20.w, 12.h, 20.w, 20.h),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -80,17 +83,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   Text(
                                     '${DuukaFormatters.greeting()} 👋',
                                     style: TextStyle(
-                                      fontSize: 16.sp,
-                                      fontWeight: FontWeight.w500,
-                                      color: Colors.white.withOpacity(0.9),
+                                      fontSize: 13.sp,
+                                      fontWeight: FontWeight.w400,
+                                      color: Colors.white.withOpacity(0.85),
                                     ),
                                   ),
-                                  SizedBox(height: 4.h),
+                                  SizedBox(height: 2.h),
                                   businessAsync.when(
                                     data: (business) => Text(
                                       business?.name ?? DuukaStrings.appName,
                                       style: TextStyle(
-                                        fontSize: 24.sp,
+                                        fontSize: 20.sp,
                                         fontWeight: FontWeight.w700,
                                         color: Colors.white,
                                       ),
@@ -105,46 +108,38 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             ),
                             Row(
                               children: [
-                                IconButton(
-                                  onPressed: () {},
-                                  icon: Stack(
-                                    children: [
-                                      Icon(
-                                        Icons.notifications_outlined,
-                                        size: 24.sp,
-                                        color: Colors.white,
-                                      ),
-                                      Positioned(
-                                        top: 0,
-                                        right: 0,
-                                        child: Container(
-                                          width: 8.w,
-                                          height: 8.h,
-                                          decoration: const BoxDecoration(
-                                            color: DuukaColors.error,
-                                            shape: BoxShape.circle,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
+                                // Sync status icon
+                                const SyncStatusIndicator(),
+                                SizedBox(
+                                  width: 36.w,
+                                  height: 36.h,
+                                  child: IconButton(
+                                    padding: EdgeInsets.zero,
+                                    onPressed: () {},
+                                    icon: Icon(
+                                      Icons.notifications_outlined,
+                                      size: 22.sp,
+                                      color: Colors.white,
+                                    ),
                                   ),
                                 ),
-                                IconButton(
-                                  onPressed: () => context.push('/settings'),
-                                  icon: Icon(
-                                    Icons.settings_outlined,
-                                    size: 24.sp,
-                                    color: Colors.white,
+                                SizedBox(
+                                  width: 36.w,
+                                  height: 36.h,
+                                  child: IconButton(
+                                    padding: EdgeInsets.zero,
+                                    onPressed: () => context.push('/settings'),
+                                    icon: Icon(
+                                      Icons.settings_outlined,
+                                      size: 22.sp,
+                                      color: Colors.white,
+                                    ),
                                   ),
                                 ),
                               ],
                             ),
                           ],
                         ),
-                        SizedBox(height: 24.h),
-
-                        // Sync Status
-                        const SyncStatusIndicator(),
                       ],
                     ),
                   ),
@@ -154,7 +149,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
             // Content
             SliverPadding(
-              padding: EdgeInsets.all(24.w),
+              padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 16.h),
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
                   // Sales Summary Card - Shows Cash at Hand (actual money received)
@@ -170,7 +165,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       onToggleVisibility: _toggleAmountVisibility,
                     ),
                     loading: () => Container(
-                      height: 140.h,
+                      height: 100.h,
                       decoration: BoxDecoration(
                         color: DuukaColors.primaryBg,
                         borderRadius: BorderRadius.circular(16.r),
@@ -179,16 +174,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                     error: (_, __) => const SizedBox(),
                   ),
-                  SizedBox(height: 24.h),
+                  SizedBox(height: 16.h),
 
                   // Quick Actions Grid
                   GridView.count(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     crossAxisCount: 3,
-                    mainAxisSpacing: 12.h,
-                    crossAxisSpacing: 12.w,
-                    childAspectRatio: 1.0,
+                    mainAxisSpacing: 8.h,
+                    crossAxisSpacing: 8.w,
+                    childAspectRatio: 1.15,
                     children: [
                       QuickActionButton(
                         icon: Icons.shopping_cart_outlined,
@@ -230,7 +225,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ),
                     ],
                   ),
-                  SizedBox(height: 24.h),
+                  SizedBox(height: 16.h),
 
                   // Low Stock Alert
                   lowStockAsync.when(
@@ -243,7 +238,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             itemNames: products.map((p) => p.name).toList(),
                             onTap: () => context.push('/inventory'),
                           ),
-                          SizedBox(height: 24.h),
+                          SizedBox(height: 16.h),
                         ],
                       );
                     },
@@ -258,8 +253,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       Text(
                         DuukaStrings.recentSales,
                         style: TextStyle(
-                          fontSize: 18.sp,
-                          fontWeight: FontWeight.w700,
+                          fontSize: 15.sp,
+                          fontWeight: FontWeight.w600,
                           color: DuukaColors.textPrimary,
                         ),
                       ),
@@ -276,7 +271,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ),
                     ],
                   ),
-                  SizedBox(height: 12.h),
+                  SizedBox(height: 8.h),
 
                   // Recent Sales List
                   recentSalesAsync.when(
@@ -305,7 +300,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       description: 'Please try again',
                     ),
                   ),
-                  SizedBox(height: 80.h), // Bottom nav padding
+                  SizedBox(height: 60.h), // Bottom nav padding
                 ]),
               ),
             ),

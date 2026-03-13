@@ -27,137 +27,152 @@ const InvoiceSchema = CollectionSchema(
       name: r'balance',
       type: IsarType.double,
     ),
-    r'cancelledAt': PropertySchema(
-      id: 2,
-      name: r'cancelledAt',
-      type: IsarType.dateTime,
-    ),
     r'convertedToSaleAt': PropertySchema(
-      id: 3,
+      id: 2,
       name: r'convertedToSaleAt',
       type: IsarType.dateTime,
     ),
     r'createdAt': PropertySchema(
-      id: 4,
+      id: 3,
       name: r'createdAt',
       type: IsarType.dateTime,
     ),
     r'customerId': PropertySchema(
-      id: 5,
+      id: 4,
       name: r'customerId',
       type: IsarType.long,
     ),
     r'customerName': PropertySchema(
-      id: 6,
+      id: 5,
       name: r'customerName',
       type: IsarType.string,
     ),
     r'customerPhone': PropertySchema(
-      id: 7,
+      id: 6,
       name: r'customerPhone',
       type: IsarType.string,
     ),
     r'discount': PropertySchema(
-      id: 8,
+      id: 7,
       name: r'discount',
       type: IsarType.double,
     ),
     r'discountPercent': PropertySchema(
-      id: 9,
+      id: 8,
       name: r'discountPercent',
       type: IsarType.double,
     ),
     r'dueAt': PropertySchema(
-      id: 10,
+      id: 9,
       name: r'dueAt',
       type: IsarType.dateTime,
     ),
     r'invoiceNumber': PropertySchema(
-      id: 11,
+      id: 10,
       name: r'invoiceNumber',
       type: IsarType.string,
     ),
-    r'issuedAt': PropertySchema(
+    r'isOverdue': PropertySchema(
+      id: 11,
+      name: r'isOverdue',
+      type: IsarType.bool,
+    ),
+    r'isPaid': PropertySchema(
       id: 12,
+      name: r'isPaid',
+      type: IsarType.bool,
+    ),
+    r'issuedAt': PropertySchema(
+      id: 13,
       name: r'issuedAt',
       type: IsarType.dateTime,
     ),
+    r'itemCount': PropertySchema(
+      id: 14,
+      name: r'itemCount',
+      type: IsarType.long,
+    ),
     r'items': PropertySchema(
-      id: 13,
+      id: 15,
       name: r'items',
       type: IsarType.objectList,
       target: r'InvoiceItem',
     ),
     r'notes': PropertySchema(
-      id: 14,
+      id: 16,
       name: r'notes',
       type: IsarType.string,
     ),
+    r'paymentPercentage': PropertySchema(
+      id: 17,
+      name: r'paymentPercentage',
+      type: IsarType.double,
+    ),
     r'payments': PropertySchema(
-      id: 15,
+      id: 18,
       name: r'payments',
       type: IsarType.objectList,
       target: r'InvoicePayment',
     ),
+    r'remainingBalance': PropertySchema(
+      id: 19,
+      name: r'remainingBalance',
+      type: IsarType.double,
+    ),
     r'remoteId': PropertySchema(
-      id: 16,
+      id: 20,
       name: r'remoteId',
       type: IsarType.string,
     ),
     r'saleId': PropertySchema(
-      id: 17,
+      id: 21,
       name: r'saleId',
       type: IsarType.long,
     ),
-    r'saleReceiptNumber': PropertySchema(
-      id: 18,
-      name: r'saleReceiptNumber',
-      type: IsarType.string,
-    ),
-    r'sentAt': PropertySchema(
-      id: 19,
-      name: r'sentAt',
-      type: IsarType.dateTime,
-    ),
     r'status': PropertySchema(
-      id: 20,
+      id: 22,
       name: r'status',
       type: IsarType.byte,
       enumMap: _InvoicestatusEnumValueMap,
     ),
     r'subtotal': PropertySchema(
-      id: 21,
+      id: 23,
       name: r'subtotal',
       type: IsarType.double,
     ),
     r'syncStatus': PropertySchema(
-      id: 22,
+      id: 24,
       name: r'syncStatus',
       type: IsarType.byte,
       enumMap: _InvoicesyncStatusEnumValueMap,
     ),
     r'taxAmount': PropertySchema(
-      id: 23,
+      id: 25,
       name: r'taxAmount',
       type: IsarType.double,
     ),
     r'total': PropertySchema(
-      id: 24,
+      id: 26,
       name: r'total',
       type: IsarType.double,
     ),
+    r'totalQuantity': PropertySchema(
+      id: 27,
+      name: r'totalQuantity',
+      type: IsarType.double,
+    ),
     r'updatedAt': PropertySchema(
-      id: 25,
+      id: 28,
       name: r'updatedAt',
       type: IsarType.dateTime,
     ),
     r'userId': PropertySchema(
-      id: 26,
+      id: 29,
       name: r'userId',
       type: IsarType.long,
     ),
     r'userName': PropertySchema(
-      id: 27,
+      id: 30,
       name: r'userName',
       type: IsarType.string,
     )
@@ -256,12 +271,6 @@ int _invoiceEstimateSize(
     }
   }
   {
-    final value = object.saleReceiptNumber;
-    if (value != null) {
-      bytesCount += 3 + value.length * 3;
-    }
-  }
-  {
     final value = object.userName;
     if (value != null) {
       bytesCount += 3 + value.length * 3;
@@ -278,42 +287,45 @@ void _invoiceSerialize(
 ) {
   writer.writeDouble(offsets[0], object.amountPaid);
   writer.writeDouble(offsets[1], object.balance);
-  writer.writeDateTime(offsets[2], object.cancelledAt);
-  writer.writeDateTime(offsets[3], object.convertedToSaleAt);
-  writer.writeDateTime(offsets[4], object.createdAt);
-  writer.writeLong(offsets[5], object.customerId);
-  writer.writeString(offsets[6], object.customerName);
-  writer.writeString(offsets[7], object.customerPhone);
-  writer.writeDouble(offsets[8], object.discount);
-  writer.writeDouble(offsets[9], object.discountPercent);
-  writer.writeDateTime(offsets[10], object.dueAt);
-  writer.writeString(offsets[11], object.invoiceNumber);
-  writer.writeDateTime(offsets[12], object.issuedAt);
+  writer.writeDateTime(offsets[2], object.convertedToSaleAt);
+  writer.writeDateTime(offsets[3], object.createdAt);
+  writer.writeLong(offsets[4], object.customerId);
+  writer.writeString(offsets[5], object.customerName);
+  writer.writeString(offsets[6], object.customerPhone);
+  writer.writeDouble(offsets[7], object.discount);
+  writer.writeDouble(offsets[8], object.discountPercent);
+  writer.writeDateTime(offsets[9], object.dueAt);
+  writer.writeString(offsets[10], object.invoiceNumber);
+  writer.writeBool(offsets[11], object.isOverdue);
+  writer.writeBool(offsets[12], object.isPaid);
+  writer.writeDateTime(offsets[13], object.issuedAt);
+  writer.writeLong(offsets[14], object.itemCount);
   writer.writeObjectList<InvoiceItem>(
-    offsets[13],
+    offsets[15],
     allOffsets,
     InvoiceItemSchema.serialize,
     object.items,
   );
-  writer.writeString(offsets[14], object.notes);
+  writer.writeString(offsets[16], object.notes);
+  writer.writeDouble(offsets[17], object.paymentPercentage);
   writer.writeObjectList<InvoicePayment>(
-    offsets[15],
+    offsets[18],
     allOffsets,
     InvoicePaymentSchema.serialize,
     object.payments,
   );
-  writer.writeString(offsets[16], object.remoteId);
-  writer.writeLong(offsets[17], object.saleId);
-  writer.writeString(offsets[18], object.saleReceiptNumber);
-  writer.writeDateTime(offsets[19], object.sentAt);
-  writer.writeByte(offsets[20], object.status.index);
-  writer.writeDouble(offsets[21], object.subtotal);
-  writer.writeByte(offsets[22], object.syncStatus.index);
-  writer.writeDouble(offsets[23], object.taxAmount);
-  writer.writeDouble(offsets[24], object.total);
-  writer.writeDateTime(offsets[25], object.updatedAt);
-  writer.writeLong(offsets[26], object.userId);
-  writer.writeString(offsets[27], object.userName);
+  writer.writeDouble(offsets[19], object.remainingBalance);
+  writer.writeString(offsets[20], object.remoteId);
+  writer.writeLong(offsets[21], object.saleId);
+  writer.writeByte(offsets[22], object.status.index);
+  writer.writeDouble(offsets[23], object.subtotal);
+  writer.writeByte(offsets[24], object.syncStatus.index);
+  writer.writeDouble(offsets[25], object.taxAmount);
+  writer.writeDouble(offsets[26], object.total);
+  writer.writeDouble(offsets[27], object.totalQuantity);
+  writer.writeDateTime(offsets[28], object.updatedAt);
+  writer.writeLong(offsets[29], object.userId);
+  writer.writeString(offsets[30], object.userName);
 }
 
 Invoice _invoiceDeserialize(
@@ -325,49 +337,46 @@ Invoice _invoiceDeserialize(
   final object = Invoice();
   object.amountPaid = reader.readDouble(offsets[0]);
   object.balance = reader.readDouble(offsets[1]);
-  object.cancelledAt = reader.readDateTimeOrNull(offsets[2]);
-  object.convertedToSaleAt = reader.readDateTimeOrNull(offsets[3]);
-  object.createdAt = reader.readDateTime(offsets[4]);
-  object.customerId = reader.readLongOrNull(offsets[5]);
-  object.customerName = reader.readStringOrNull(offsets[6]);
-  object.customerPhone = reader.readStringOrNull(offsets[7]);
-  object.discount = reader.readDouble(offsets[8]);
-  object.discountPercent = reader.readDouble(offsets[9]);
-  object.dueAt = reader.readDateTimeOrNull(offsets[10]);
+  object.convertedToSaleAt = reader.readDateTimeOrNull(offsets[2]);
+  object.createdAt = reader.readDateTime(offsets[3]);
+  object.customerId = reader.readLongOrNull(offsets[4]);
+  object.customerName = reader.readStringOrNull(offsets[5]);
+  object.customerPhone = reader.readStringOrNull(offsets[6]);
+  object.discount = reader.readDouble(offsets[7]);
+  object.discountPercent = reader.readDouble(offsets[8]);
+  object.dueAt = reader.readDateTimeOrNull(offsets[9]);
   object.id = id;
-  object.invoiceNumber = reader.readString(offsets[11]);
-  object.issuedAt = reader.readDateTime(offsets[12]);
+  object.invoiceNumber = reader.readString(offsets[10]);
+  object.issuedAt = reader.readDateTime(offsets[13]);
   object.items = reader.readObjectList<InvoiceItem>(
-        offsets[13],
+        offsets[15],
         InvoiceItemSchema.deserialize,
         allOffsets,
         InvoiceItem(),
       ) ??
       [];
-  object.notes = reader.readStringOrNull(offsets[14]);
+  object.notes = reader.readStringOrNull(offsets[16]);
   object.payments = reader.readObjectList<InvoicePayment>(
-        offsets[15],
+        offsets[18],
         InvoicePaymentSchema.deserialize,
         allOffsets,
         InvoicePayment(),
       ) ??
       [];
-  object.remoteId = reader.readStringOrNull(offsets[16]);
-  object.saleId = reader.readLongOrNull(offsets[17]);
-  object.saleReceiptNumber = reader.readStringOrNull(offsets[18]);
-  object.sentAt = reader.readDateTimeOrNull(offsets[19]);
+  object.remoteId = reader.readStringOrNull(offsets[20]);
+  object.saleId = reader.readLongOrNull(offsets[21]);
   object.status =
-      _InvoicestatusValueEnumMap[reader.readByteOrNull(offsets[20])] ??
+      _InvoicestatusValueEnumMap[reader.readByteOrNull(offsets[22])] ??
           InvoiceStatus.draft;
-  object.subtotal = reader.readDouble(offsets[21]);
+  object.subtotal = reader.readDouble(offsets[23]);
   object.syncStatus =
-      _InvoicesyncStatusValueEnumMap[reader.readByteOrNull(offsets[22])] ??
+      _InvoicesyncStatusValueEnumMap[reader.readByteOrNull(offsets[24])] ??
           SyncStatus.synced;
-  object.taxAmount = reader.readDouble(offsets[23]);
-  object.total = reader.readDouble(offsets[24]);
-  object.updatedAt = reader.readDateTimeOrNull(offsets[25]);
-  object.userId = reader.readLong(offsets[26]);
-  object.userName = reader.readStringOrNull(offsets[27]);
+  object.taxAmount = reader.readDouble(offsets[25]);
+  object.total = reader.readDouble(offsets[26]);
+  object.updatedAt = reader.readDateTimeOrNull(offsets[28]);
+  object.userId = reader.readLong(offsets[29]);
+  object.userName = reader.readStringOrNull(offsets[30]);
   return object;
 }
 
@@ -385,26 +394,30 @@ P _invoiceDeserializeProp<P>(
     case 2:
       return (reader.readDateTimeOrNull(offset)) as P;
     case 3:
-      return (reader.readDateTimeOrNull(offset)) as P;
-    case 4:
       return (reader.readDateTime(offset)) as P;
-    case 5:
+    case 4:
       return (reader.readLongOrNull(offset)) as P;
+    case 5:
+      return (reader.readStringOrNull(offset)) as P;
     case 6:
       return (reader.readStringOrNull(offset)) as P;
     case 7:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readDouble(offset)) as P;
     case 8:
       return (reader.readDouble(offset)) as P;
     case 9:
-      return (reader.readDouble(offset)) as P;
-    case 10:
       return (reader.readDateTimeOrNull(offset)) as P;
-    case 11:
+    case 10:
       return (reader.readString(offset)) as P;
+    case 11:
+      return (reader.readBool(offset)) as P;
     case 12:
-      return (reader.readDateTime(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 13:
+      return (reader.readDateTime(offset)) as P;
+    case 14:
+      return (reader.readLong(offset)) as P;
+    case 15:
       return (reader.readObjectList<InvoiceItem>(
             offset,
             InvoiceItemSchema.deserialize,
@@ -412,9 +425,11 @@ P _invoiceDeserializeProp<P>(
             InvoiceItem(),
           ) ??
           []) as P;
-    case 14:
+    case 16:
       return (reader.readStringOrNull(offset)) as P;
-    case 15:
+    case 17:
+      return (reader.readDouble(offset)) as P;
+    case 18:
       return (reader.readObjectList<InvoicePayment>(
             offset,
             InvoicePaymentSchema.deserialize,
@@ -422,31 +437,31 @@ P _invoiceDeserializeProp<P>(
             InvoicePayment(),
           ) ??
           []) as P;
-    case 16:
-      return (reader.readStringOrNull(offset)) as P;
-    case 17:
-      return (reader.readLongOrNull(offset)) as P;
-    case 18:
-      return (reader.readStringOrNull(offset)) as P;
     case 19:
-      return (reader.readDateTimeOrNull(offset)) as P;
+      return (reader.readDouble(offset)) as P;
     case 20:
+      return (reader.readStringOrNull(offset)) as P;
+    case 21:
+      return (reader.readLongOrNull(offset)) as P;
+    case 22:
       return (_InvoicestatusValueEnumMap[reader.readByteOrNull(offset)] ??
           InvoiceStatus.draft) as P;
-    case 21:
-      return (reader.readDouble(offset)) as P;
-    case 22:
-      return (_InvoicesyncStatusValueEnumMap[reader.readByteOrNull(offset)] ??
-          SyncStatus.synced) as P;
     case 23:
       return (reader.readDouble(offset)) as P;
     case 24:
-      return (reader.readDouble(offset)) as P;
+      return (_InvoicesyncStatusValueEnumMap[reader.readByteOrNull(offset)] ??
+          SyncStatus.synced) as P;
     case 25:
-      return (reader.readDateTimeOrNull(offset)) as P;
+      return (reader.readDouble(offset)) as P;
     case 26:
-      return (reader.readLong(offset)) as P;
+      return (reader.readDouble(offset)) as P;
     case 27:
+      return (reader.readDouble(offset)) as P;
+    case 28:
+      return (reader.readDateTimeOrNull(offset)) as P;
+    case 29:
+      return (reader.readLong(offset)) as P;
+    case 30:
       return (reader.readStringOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -888,75 +903,6 @@ extension InvoiceQueryFilter
         upper: upper,
         includeUpper: includeUpper,
         epsilon: epsilon,
-      ));
-    });
-  }
-
-  QueryBuilder<Invoice, Invoice, QAfterFilterCondition> cancelledAtIsNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'cancelledAt',
-      ));
-    });
-  }
-
-  QueryBuilder<Invoice, Invoice, QAfterFilterCondition> cancelledAtIsNotNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'cancelledAt',
-      ));
-    });
-  }
-
-  QueryBuilder<Invoice, Invoice, QAfterFilterCondition> cancelledAtEqualTo(
-      DateTime? value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'cancelledAt',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<Invoice, Invoice, QAfterFilterCondition> cancelledAtGreaterThan(
-    DateTime? value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'cancelledAt',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<Invoice, Invoice, QAfterFilterCondition> cancelledAtLessThan(
-    DateTime? value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'cancelledAt',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<Invoice, Invoice, QAfterFilterCondition> cancelledAtBetween(
-    DateTime? lower,
-    DateTime? upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'cancelledAt',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
       ));
     });
   }
@@ -1832,6 +1778,26 @@ extension InvoiceQueryFilter
     });
   }
 
+  QueryBuilder<Invoice, Invoice, QAfterFilterCondition> isOverdueEqualTo(
+      bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'isOverdue',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Invoice, Invoice, QAfterFilterCondition> isPaidEqualTo(
+      bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'isPaid',
+        value: value,
+      ));
+    });
+  }
+
   QueryBuilder<Invoice, Invoice, QAfterFilterCondition> issuedAtEqualTo(
       DateTime value) {
     return QueryBuilder.apply(this, (query) {
@@ -1877,6 +1843,59 @@ extension InvoiceQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
         property: r'issuedAt',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<Invoice, Invoice, QAfterFilterCondition> itemCountEqualTo(
+      int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'itemCount',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Invoice, Invoice, QAfterFilterCondition> itemCountGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'itemCount',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Invoice, Invoice, QAfterFilterCondition> itemCountLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'itemCount',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Invoice, Invoice, QAfterFilterCondition> itemCountBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'itemCount',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
@@ -2115,6 +2134,72 @@ extension InvoiceQueryFilter
     });
   }
 
+  QueryBuilder<Invoice, Invoice, QAfterFilterCondition>
+      paymentPercentageEqualTo(
+    double value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'paymentPercentage',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Invoice, Invoice, QAfterFilterCondition>
+      paymentPercentageGreaterThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'paymentPercentage',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Invoice, Invoice, QAfterFilterCondition>
+      paymentPercentageLessThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'paymentPercentage',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Invoice, Invoice, QAfterFilterCondition>
+      paymentPercentageBetween(
+    double lower,
+    double upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'paymentPercentage',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
   QueryBuilder<Invoice, Invoice, QAfterFilterCondition> paymentsLengthEqualTo(
       int length) {
     return QueryBuilder.apply(this, (query) {
@@ -2197,6 +2282,70 @@ extension InvoiceQueryFilter
         upper,
         includeUpper,
       );
+    });
+  }
+
+  QueryBuilder<Invoice, Invoice, QAfterFilterCondition> remainingBalanceEqualTo(
+    double value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'remainingBalance',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Invoice, Invoice, QAfterFilterCondition>
+      remainingBalanceGreaterThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'remainingBalance',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Invoice, Invoice, QAfterFilterCondition>
+      remainingBalanceLessThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'remainingBalance',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Invoice, Invoice, QAfterFilterCondition> remainingBalanceBetween(
+    double lower,
+    double upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'remainingBalance',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
+      ));
     });
   }
 
@@ -2407,229 +2556,6 @@ extension InvoiceQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
         property: r'saleId',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
-    });
-  }
-
-  QueryBuilder<Invoice, Invoice, QAfterFilterCondition>
-      saleReceiptNumberIsNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'saleReceiptNumber',
-      ));
-    });
-  }
-
-  QueryBuilder<Invoice, Invoice, QAfterFilterCondition>
-      saleReceiptNumberIsNotNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'saleReceiptNumber',
-      ));
-    });
-  }
-
-  QueryBuilder<Invoice, Invoice, QAfterFilterCondition>
-      saleReceiptNumberEqualTo(
-    String? value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'saleReceiptNumber',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Invoice, Invoice, QAfterFilterCondition>
-      saleReceiptNumberGreaterThan(
-    String? value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'saleReceiptNumber',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Invoice, Invoice, QAfterFilterCondition>
-      saleReceiptNumberLessThan(
-    String? value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'saleReceiptNumber',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Invoice, Invoice, QAfterFilterCondition>
-      saleReceiptNumberBetween(
-    String? lower,
-    String? upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'saleReceiptNumber',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Invoice, Invoice, QAfterFilterCondition>
-      saleReceiptNumberStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'saleReceiptNumber',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Invoice, Invoice, QAfterFilterCondition>
-      saleReceiptNumberEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'saleReceiptNumber',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Invoice, Invoice, QAfterFilterCondition>
-      saleReceiptNumberContains(String value, {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'saleReceiptNumber',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Invoice, Invoice, QAfterFilterCondition>
-      saleReceiptNumberMatches(String pattern, {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'saleReceiptNumber',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Invoice, Invoice, QAfterFilterCondition>
-      saleReceiptNumberIsEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'saleReceiptNumber',
-        value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<Invoice, Invoice, QAfterFilterCondition>
-      saleReceiptNumberIsNotEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'saleReceiptNumber',
-        value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<Invoice, Invoice, QAfterFilterCondition> sentAtIsNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNull(
-        property: r'sentAt',
-      ));
-    });
-  }
-
-  QueryBuilder<Invoice, Invoice, QAfterFilterCondition> sentAtIsNotNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(const FilterCondition.isNotNull(
-        property: r'sentAt',
-      ));
-    });
-  }
-
-  QueryBuilder<Invoice, Invoice, QAfterFilterCondition> sentAtEqualTo(
-      DateTime? value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'sentAt',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<Invoice, Invoice, QAfterFilterCondition> sentAtGreaterThan(
-    DateTime? value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'sentAt',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<Invoice, Invoice, QAfterFilterCondition> sentAtLessThan(
-    DateTime? value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'sentAt',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<Invoice, Invoice, QAfterFilterCondition> sentAtBetween(
-    DateTime? lower,
-    DateTime? upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'sentAt',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
@@ -2921,6 +2847,69 @@ extension InvoiceQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
         property: r'total',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Invoice, Invoice, QAfterFilterCondition> totalQuantityEqualTo(
+    double value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'totalQuantity',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Invoice, Invoice, QAfterFilterCondition>
+      totalQuantityGreaterThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'totalQuantity',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Invoice, Invoice, QAfterFilterCondition> totalQuantityLessThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'totalQuantity',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Invoice, Invoice, QAfterFilterCondition> totalQuantityBetween(
+    double lower,
+    double upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'totalQuantity',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
@@ -3244,18 +3233,6 @@ extension InvoiceQuerySortBy on QueryBuilder<Invoice, Invoice, QSortBy> {
     });
   }
 
-  QueryBuilder<Invoice, Invoice, QAfterSortBy> sortByCancelledAt() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'cancelledAt', Sort.asc);
-    });
-  }
-
-  QueryBuilder<Invoice, Invoice, QAfterSortBy> sortByCancelledAtDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'cancelledAt', Sort.desc);
-    });
-  }
-
   QueryBuilder<Invoice, Invoice, QAfterSortBy> sortByConvertedToSaleAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'convertedToSaleAt', Sort.asc);
@@ -3364,6 +3341,30 @@ extension InvoiceQuerySortBy on QueryBuilder<Invoice, Invoice, QSortBy> {
     });
   }
 
+  QueryBuilder<Invoice, Invoice, QAfterSortBy> sortByIsOverdue() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isOverdue', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Invoice, Invoice, QAfterSortBy> sortByIsOverdueDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isOverdue', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Invoice, Invoice, QAfterSortBy> sortByIsPaid() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isPaid', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Invoice, Invoice, QAfterSortBy> sortByIsPaidDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isPaid', Sort.desc);
+    });
+  }
+
   QueryBuilder<Invoice, Invoice, QAfterSortBy> sortByIssuedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'issuedAt', Sort.asc);
@@ -3376,6 +3377,18 @@ extension InvoiceQuerySortBy on QueryBuilder<Invoice, Invoice, QSortBy> {
     });
   }
 
+  QueryBuilder<Invoice, Invoice, QAfterSortBy> sortByItemCount() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'itemCount', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Invoice, Invoice, QAfterSortBy> sortByItemCountDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'itemCount', Sort.desc);
+    });
+  }
+
   QueryBuilder<Invoice, Invoice, QAfterSortBy> sortByNotes() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'notes', Sort.asc);
@@ -3385,6 +3398,30 @@ extension InvoiceQuerySortBy on QueryBuilder<Invoice, Invoice, QSortBy> {
   QueryBuilder<Invoice, Invoice, QAfterSortBy> sortByNotesDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'notes', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Invoice, Invoice, QAfterSortBy> sortByPaymentPercentage() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'paymentPercentage', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Invoice, Invoice, QAfterSortBy> sortByPaymentPercentageDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'paymentPercentage', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Invoice, Invoice, QAfterSortBy> sortByRemainingBalance() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'remainingBalance', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Invoice, Invoice, QAfterSortBy> sortByRemainingBalanceDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'remainingBalance', Sort.desc);
     });
   }
 
@@ -3409,30 +3446,6 @@ extension InvoiceQuerySortBy on QueryBuilder<Invoice, Invoice, QSortBy> {
   QueryBuilder<Invoice, Invoice, QAfterSortBy> sortBySaleIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'saleId', Sort.desc);
-    });
-  }
-
-  QueryBuilder<Invoice, Invoice, QAfterSortBy> sortBySaleReceiptNumber() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'saleReceiptNumber', Sort.asc);
-    });
-  }
-
-  QueryBuilder<Invoice, Invoice, QAfterSortBy> sortBySaleReceiptNumberDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'saleReceiptNumber', Sort.desc);
-    });
-  }
-
-  QueryBuilder<Invoice, Invoice, QAfterSortBy> sortBySentAt() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'sentAt', Sort.asc);
-    });
-  }
-
-  QueryBuilder<Invoice, Invoice, QAfterSortBy> sortBySentAtDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'sentAt', Sort.desc);
     });
   }
 
@@ -3496,6 +3509,18 @@ extension InvoiceQuerySortBy on QueryBuilder<Invoice, Invoice, QSortBy> {
     });
   }
 
+  QueryBuilder<Invoice, Invoice, QAfterSortBy> sortByTotalQuantity() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'totalQuantity', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Invoice, Invoice, QAfterSortBy> sortByTotalQuantityDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'totalQuantity', Sort.desc);
+    });
+  }
+
   QueryBuilder<Invoice, Invoice, QAfterSortBy> sortByUpdatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'updatedAt', Sort.asc);
@@ -3556,18 +3581,6 @@ extension InvoiceQuerySortThenBy
   QueryBuilder<Invoice, Invoice, QAfterSortBy> thenByBalanceDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'balance', Sort.desc);
-    });
-  }
-
-  QueryBuilder<Invoice, Invoice, QAfterSortBy> thenByCancelledAt() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'cancelledAt', Sort.asc);
-    });
-  }
-
-  QueryBuilder<Invoice, Invoice, QAfterSortBy> thenByCancelledAtDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'cancelledAt', Sort.desc);
     });
   }
 
@@ -3691,6 +3704,30 @@ extension InvoiceQuerySortThenBy
     });
   }
 
+  QueryBuilder<Invoice, Invoice, QAfterSortBy> thenByIsOverdue() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isOverdue', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Invoice, Invoice, QAfterSortBy> thenByIsOverdueDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isOverdue', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Invoice, Invoice, QAfterSortBy> thenByIsPaid() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isPaid', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Invoice, Invoice, QAfterSortBy> thenByIsPaidDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isPaid', Sort.desc);
+    });
+  }
+
   QueryBuilder<Invoice, Invoice, QAfterSortBy> thenByIssuedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'issuedAt', Sort.asc);
@@ -3703,6 +3740,18 @@ extension InvoiceQuerySortThenBy
     });
   }
 
+  QueryBuilder<Invoice, Invoice, QAfterSortBy> thenByItemCount() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'itemCount', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Invoice, Invoice, QAfterSortBy> thenByItemCountDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'itemCount', Sort.desc);
+    });
+  }
+
   QueryBuilder<Invoice, Invoice, QAfterSortBy> thenByNotes() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'notes', Sort.asc);
@@ -3712,6 +3761,30 @@ extension InvoiceQuerySortThenBy
   QueryBuilder<Invoice, Invoice, QAfterSortBy> thenByNotesDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'notes', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Invoice, Invoice, QAfterSortBy> thenByPaymentPercentage() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'paymentPercentage', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Invoice, Invoice, QAfterSortBy> thenByPaymentPercentageDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'paymentPercentage', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Invoice, Invoice, QAfterSortBy> thenByRemainingBalance() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'remainingBalance', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Invoice, Invoice, QAfterSortBy> thenByRemainingBalanceDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'remainingBalance', Sort.desc);
     });
   }
 
@@ -3736,30 +3809,6 @@ extension InvoiceQuerySortThenBy
   QueryBuilder<Invoice, Invoice, QAfterSortBy> thenBySaleIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'saleId', Sort.desc);
-    });
-  }
-
-  QueryBuilder<Invoice, Invoice, QAfterSortBy> thenBySaleReceiptNumber() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'saleReceiptNumber', Sort.asc);
-    });
-  }
-
-  QueryBuilder<Invoice, Invoice, QAfterSortBy> thenBySaleReceiptNumberDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'saleReceiptNumber', Sort.desc);
-    });
-  }
-
-  QueryBuilder<Invoice, Invoice, QAfterSortBy> thenBySentAt() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'sentAt', Sort.asc);
-    });
-  }
-
-  QueryBuilder<Invoice, Invoice, QAfterSortBy> thenBySentAtDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'sentAt', Sort.desc);
     });
   }
 
@@ -3823,6 +3872,18 @@ extension InvoiceQuerySortThenBy
     });
   }
 
+  QueryBuilder<Invoice, Invoice, QAfterSortBy> thenByTotalQuantity() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'totalQuantity', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Invoice, Invoice, QAfterSortBy> thenByTotalQuantityDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'totalQuantity', Sort.desc);
+    });
+  }
+
   QueryBuilder<Invoice, Invoice, QAfterSortBy> thenByUpdatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'updatedAt', Sort.asc);
@@ -3871,12 +3932,6 @@ extension InvoiceQueryWhereDistinct
   QueryBuilder<Invoice, Invoice, QDistinct> distinctByBalance() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'balance');
-    });
-  }
-
-  QueryBuilder<Invoice, Invoice, QDistinct> distinctByCancelledAt() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'cancelledAt');
     });
   }
 
@@ -3939,9 +3994,27 @@ extension InvoiceQueryWhereDistinct
     });
   }
 
+  QueryBuilder<Invoice, Invoice, QDistinct> distinctByIsOverdue() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'isOverdue');
+    });
+  }
+
+  QueryBuilder<Invoice, Invoice, QDistinct> distinctByIsPaid() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'isPaid');
+    });
+  }
+
   QueryBuilder<Invoice, Invoice, QDistinct> distinctByIssuedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'issuedAt');
+    });
+  }
+
+  QueryBuilder<Invoice, Invoice, QDistinct> distinctByItemCount() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'itemCount');
     });
   }
 
@@ -3949,6 +4022,18 @@ extension InvoiceQueryWhereDistinct
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'notes', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<Invoice, Invoice, QDistinct> distinctByPaymentPercentage() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'paymentPercentage');
+    });
+  }
+
+  QueryBuilder<Invoice, Invoice, QDistinct> distinctByRemainingBalance() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'remainingBalance');
     });
   }
 
@@ -3962,20 +4047,6 @@ extension InvoiceQueryWhereDistinct
   QueryBuilder<Invoice, Invoice, QDistinct> distinctBySaleId() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'saleId');
-    });
-  }
-
-  QueryBuilder<Invoice, Invoice, QDistinct> distinctBySaleReceiptNumber(
-      {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'saleReceiptNumber',
-          caseSensitive: caseSensitive);
-    });
-  }
-
-  QueryBuilder<Invoice, Invoice, QDistinct> distinctBySentAt() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'sentAt');
     });
   }
 
@@ -4006,6 +4077,12 @@ extension InvoiceQueryWhereDistinct
   QueryBuilder<Invoice, Invoice, QDistinct> distinctByTotal() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'total');
+    });
+  }
+
+  QueryBuilder<Invoice, Invoice, QDistinct> distinctByTotalQuantity() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'totalQuantity');
     });
   }
 
@@ -4046,12 +4123,6 @@ extension InvoiceQueryProperty
   QueryBuilder<Invoice, double, QQueryOperations> balanceProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'balance');
-    });
-  }
-
-  QueryBuilder<Invoice, DateTime?, QQueryOperations> cancelledAtProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'cancelledAt');
     });
   }
 
@@ -4110,9 +4181,27 @@ extension InvoiceQueryProperty
     });
   }
 
+  QueryBuilder<Invoice, bool, QQueryOperations> isOverdueProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'isOverdue');
+    });
+  }
+
+  QueryBuilder<Invoice, bool, QQueryOperations> isPaidProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'isPaid');
+    });
+  }
+
   QueryBuilder<Invoice, DateTime, QQueryOperations> issuedAtProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'issuedAt');
+    });
+  }
+
+  QueryBuilder<Invoice, int, QQueryOperations> itemCountProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'itemCount');
     });
   }
 
@@ -4128,10 +4217,22 @@ extension InvoiceQueryProperty
     });
   }
 
+  QueryBuilder<Invoice, double, QQueryOperations> paymentPercentageProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'paymentPercentage');
+    });
+  }
+
   QueryBuilder<Invoice, List<InvoicePayment>, QQueryOperations>
       paymentsProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'payments');
+    });
+  }
+
+  QueryBuilder<Invoice, double, QQueryOperations> remainingBalanceProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'remainingBalance');
     });
   }
 
@@ -4144,18 +4245,6 @@ extension InvoiceQueryProperty
   QueryBuilder<Invoice, int?, QQueryOperations> saleIdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'saleId');
-    });
-  }
-
-  QueryBuilder<Invoice, String?, QQueryOperations> saleReceiptNumberProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'saleReceiptNumber');
-    });
-  }
-
-  QueryBuilder<Invoice, DateTime?, QQueryOperations> sentAtProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'sentAt');
     });
   }
 
@@ -4186,6 +4275,12 @@ extension InvoiceQueryProperty
   QueryBuilder<Invoice, double, QQueryOperations> totalProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'total');
+    });
+  }
+
+  QueryBuilder<Invoice, double, QQueryOperations> totalQuantityProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'totalQuantity');
     });
   }
 
@@ -4239,29 +4334,34 @@ const InvoiceItemSchema = Schema(
       name: r'productName',
       type: IsarType.string,
     ),
-    r'quantity': PropertySchema(
+    r'profit': PropertySchema(
       id: 4,
+      name: r'profit',
+      type: IsarType.double,
+    ),
+    r'quantity': PropertySchema(
+      id: 5,
       name: r'quantity',
       type: IsarType.double,
     ),
     r'specifications': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'specifications',
       type: IsarType.objectList,
       target: r'InvoiceItemSpecification',
     ),
     r'total': PropertySchema(
-      id: 6,
+      id: 7,
       name: r'total',
       type: IsarType.double,
     ),
     r'unit': PropertySchema(
-      id: 7,
+      id: 8,
       name: r'unit',
       type: IsarType.string,
     ),
     r'unitPrice': PropertySchema(
-      id: 8,
+      id: 9,
       name: r'unitPrice',
       type: IsarType.double,
     )
@@ -4302,16 +4402,17 @@ void _invoiceItemSerialize(
   writer.writeBool(offsets[1], object.isMeasurable);
   writer.writeLong(offsets[2], object.productId);
   writer.writeString(offsets[3], object.productName);
-  writer.writeDouble(offsets[4], object.quantity);
+  writer.writeDouble(offsets[4], object.profit);
+  writer.writeDouble(offsets[5], object.quantity);
   writer.writeObjectList<InvoiceItemSpecification>(
-    offsets[5],
+    offsets[6],
     allOffsets,
     InvoiceItemSpecificationSchema.serialize,
     object.specifications,
   );
-  writer.writeDouble(offsets[6], object.total);
-  writer.writeString(offsets[7], object.unit);
-  writer.writeDouble(offsets[8], object.unitPrice);
+  writer.writeDouble(offsets[7], object.total);
+  writer.writeString(offsets[8], object.unit);
+  writer.writeDouble(offsets[9], object.unitPrice);
 }
 
 InvoiceItem _invoiceItemDeserialize(
@@ -4325,17 +4426,17 @@ InvoiceItem _invoiceItemDeserialize(
   object.isMeasurable = reader.readBool(offsets[1]);
   object.productId = reader.readLong(offsets[2]);
   object.productName = reader.readString(offsets[3]);
-  object.quantity = reader.readDouble(offsets[4]);
+  object.quantity = reader.readDouble(offsets[5]);
   object.specifications = reader.readObjectList<InvoiceItemSpecification>(
-        offsets[5],
+        offsets[6],
         InvoiceItemSpecificationSchema.deserialize,
         allOffsets,
         InvoiceItemSpecification(),
       ) ??
       [];
-  object.total = reader.readDouble(offsets[6]);
-  object.unit = reader.readString(offsets[7]);
-  object.unitPrice = reader.readDouble(offsets[8]);
+  object.total = reader.readDouble(offsets[7]);
+  object.unit = reader.readString(offsets[8]);
+  object.unitPrice = reader.readDouble(offsets[9]);
   return object;
 }
 
@@ -4357,6 +4458,8 @@ P _invoiceItemDeserializeProp<P>(
     case 4:
       return (reader.readDouble(offset)) as P;
     case 5:
+      return (reader.readDouble(offset)) as P;
+    case 6:
       return (reader.readObjectList<InvoiceItemSpecification>(
             offset,
             InvoiceItemSpecificationSchema.deserialize,
@@ -4364,11 +4467,11 @@ P _invoiceItemDeserializeProp<P>(
             InvoiceItemSpecification(),
           ) ??
           []) as P;
-    case 6:
-      return (reader.readDouble(offset)) as P;
     case 7:
-      return (reader.readString(offset)) as P;
+      return (reader.readDouble(offset)) as P;
     case 8:
+      return (reader.readString(offset)) as P;
+    case 9:
       return (reader.readDouble(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -4641,6 +4744,69 @@ extension InvoiceItemQueryFilter
       return query.addFilterCondition(FilterCondition.greaterThan(
         property: r'productName',
         value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<InvoiceItem, InvoiceItem, QAfterFilterCondition> profitEqualTo(
+    double value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'profit',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<InvoiceItem, InvoiceItem, QAfterFilterCondition>
+      profitGreaterThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'profit',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<InvoiceItem, InvoiceItem, QAfterFilterCondition> profitLessThan(
+    double value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'profit',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<InvoiceItem, InvoiceItem, QAfterFilterCondition> profitBetween(
+    double lower,
+    double upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'profit',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
       ));
     });
   }

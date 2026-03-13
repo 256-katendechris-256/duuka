@@ -69,13 +69,33 @@ class SaleRepository {
     }
   }
 
-  /// Get today's total sales (all sales regardless of payment method)
+  /// Get today's total sales (only realized revenue: cash/mobile + paid credit)
   Future<double> getTodayTotal() async {
+    try {
+      final sales = await getToday();
+      return sales.fold<double>(0.0, (double sum, sale) {
+        if (sale.paymentMethod == PaymentMethod.credit) {
+          // Only count credit sales that are fully paid
+          if (sale.paymentStatus == PaymentStatus.paid) {
+            return sum + sale.total;
+          }
+          // Partial credit: count only amount already paid
+          return sum + sale.amountPaid;
+        }
+        return sum + sale.total;
+      });
+    } catch (e) {
+      throw Exception('Failed to get today\'s total: $e');
+    }
+  }
+
+  /// Get today's gross total (all sales including unpaid credit - for display purposes)
+  Future<double> getTodayGrossTotal() async {
     try {
       final sales = await getToday();
       return sales.fold<double>(0.0, (double sum, sale) => sum + sale.total);
     } catch (e) {
-      throw Exception('Failed to get today\'s total: $e');
+      throw Exception('Failed to get today\'s gross total: $e');
     }
   }
 
@@ -130,11 +150,25 @@ class SaleRepository {
     }
   }
 
-  /// Get today's profit
+  /// Get today's profit (only realized: cash/mobile + paid credit)
   Future<double> getTodayProfit() async {
     try {
       final sales = await getToday();
-      return sales.fold<double>(0.0, (double sum, sale) => sum + sale.totalProfit);
+      return sales.fold<double>(0.0, (double sum, sale) {
+        if (sale.paymentMethod == PaymentMethod.credit) {
+          // Only count profit from fully paid credit sales
+          if (sale.paymentStatus == PaymentStatus.paid) {
+            return sum + sale.totalProfit;
+          }
+          // Partial credit: proportional profit based on amount paid
+          if (sale.amountPaid > 0 && sale.total > 0) {
+            final paidRatio = sale.amountPaid / sale.total;
+            return sum + (sale.totalProfit * paidRatio);
+          }
+          return sum;
+        }
+        return sum + sale.totalProfit;
+      });
     } catch (e) {
       throw Exception('Failed to get today\'s profit: $e');
     }
@@ -160,7 +194,16 @@ class SaleRepository {
       for (var sale in sales) {
         final date = sale.createdAt;
         final key = '${date.year}-${date.month}-${date.day}';
-        dailyTotals[key] = (dailyTotals[key] ?? 0.0) + sale.total;
+        // Only count realized revenue
+        double saleAmount = sale.total;
+        if (sale.paymentMethod == PaymentMethod.credit) {
+          if (sale.paymentStatus == PaymentStatus.paid) {
+            saleAmount = sale.total;
+          } else {
+            saleAmount = sale.amountPaid;
+          }
+        }
+        dailyTotals[key] = (dailyTotals[key] ?? 0.0) + saleAmount;
       }
 
       return dailyTotals.entries

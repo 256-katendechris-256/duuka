@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
+import '../../../core/utils/post_auth_navigator.dart';
 import '../../widgets/common/duuka_button.dart';
 import '../../providers/business_provider.dart';
 
@@ -42,7 +43,7 @@ class SetupCompleteScreen extends ConsumerWidget {
                 error: (_, __) => Text(DuukaStrings.businessReadyToGo, style: TextStyle(fontSize: 16.sp, color: DuukaColors.textSecondary), textAlign: TextAlign.center),
               ),
               const Spacer(),
-              DuukaButton.primary(label: DuukaStrings.goToDashboard, onPressed: () => context.go('/home')),
+              DuukaButton.primary(label: DuukaStrings.goToDashboard, onPressed: () => navigateAfterAuth(context, ref)),
               SizedBox(height: 12.h),
               DuukaButton.secondary(label: DuukaStrings.addFirstProduct, onPressed: () => context.go('/inventory/add')),
             ],

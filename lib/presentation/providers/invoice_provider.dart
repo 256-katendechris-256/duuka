@@ -199,10 +199,10 @@ Future<List<Invoice>> todayInvoices(TodayInvoicesRef ref) async {
 @riverpod
 Future<InvoiceStats> invoiceStats(InvoiceStatsRef ref) async {
   try {
-    final user = ref.watch(authProvider).user;
-    if (user == null) throw Exception('User not authenticated');
-
-    return await ref.read(invoiceRepositoryProvider).getStats(user.id);
+    final userId = ref.watch(currentUserProvider).value?.id;
+    if (userId == null) throw Exception('User not authenticated');
+    
+    return await ref.read(invoiceRepositoryProvider).getStats(userId);
   } catch (e) {
     throw Exception('Failed to load invoice stats: $e');
   }
@@ -225,10 +225,10 @@ Future<Invoice?> invoiceById(
 @riverpod
 Future<String> nextInvoiceNumber(NextInvoiceNumberRef ref) async {
   try {
-    final user = ref.watch(authProvider).user;
-    if (user == null) throw Exception('User not authenticated');
-
-    return await ref.read(invoiceRepositoryProvider).getNextInvoiceNumber(user.id);
+    final userId = ref.watch(currentUserProvider).value?.id;
+    if (userId == null) throw Exception('User not authenticated');
+    
+    return await ref.read(invoiceRepositoryProvider).getNextInvoiceNumber(userId);
   } catch (e) {
     throw Exception('Failed to generate invoice number: $e');
   }
@@ -241,10 +241,10 @@ Future<List<Invoice>> searchInvoices(
   required String query,
 }) async {
   try {
-    final user = ref.watch(authProvider).user;
-    if (user == null) throw Exception('User not authenticated');
-
-    return await ref.read(invoiceRepositoryProvider).search(query, user.id);
+    final userId = ref.watch(currentUserProvider).value?.id;
+    if (userId == null) throw Exception('User not authenticated');
+    
+    return await ref.read(invoiceRepositoryProvider).search(query, userId);
   } catch (e) {
     throw Exception('Failed to search invoices: $e');
   }

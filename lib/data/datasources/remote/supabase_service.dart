@@ -11,9 +11,11 @@ class SupabaseService {
   static String? _googleWebClientId;
   static String? _supabaseUrl;
 
+  static bool get isInitialized => _client != null;
+
   static SupabaseClient get client {
     if (_client == null) {
-      throw Exception('SupabaseService not initialized. Call initialize() first.');
+      throw Exception('SupabaseService not initialized. Call initialize() first with SUPABASE_URL and SUPABASE_ANON_KEY (e.g. via --dart-define).');
     }
     return _client!;
   }
@@ -79,11 +81,13 @@ class SupabaseService {
     }
   }
 
-  /// Get current session
-  static Session? get currentSession => _client?.auth.currentSession;
+  /// Get current session (null when not initialized or signed out)
+  static Session? get currentSession =>
+      _client == null ? null : _client!.auth.currentSession;
 
-  /// Get current user
-  static User? get currentUser => _client?.auth.currentUser;
+  /// Get current user (null when not initialized or signed out)
+  static User? get currentUser =>
+      _client == null ? null : _client!.auth.currentUser;
 
   /// Check if user is authenticated
   static bool get isAuthenticated => currentSession != null;
@@ -94,8 +98,9 @@ class SupabaseService {
   /// Get user phone
   static String? get userPhone => currentUser?.phone;
 
-  /// Listen to auth state changes
-  static Stream<AuthState> get onAuthStateChange => auth.onAuthStateChange;
+  /// Listen to auth state changes (empty stream when not initialized)
+  static Stream<AuthState> get onAuthStateChange =>
+      _client == null ? const Stream.empty() : _client!.auth.onAuthStateChange;
 
   /// Sign in with OTP (phone)
   static Future<void> signInWithOtp({

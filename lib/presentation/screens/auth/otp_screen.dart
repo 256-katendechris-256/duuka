@@ -9,6 +9,7 @@ import '../../../core/constants/app_strings.dart';
 import '../../../core/extensions/context_extensions.dart';
 import '../../../core/utils/formatters.dart';
 import '../../widgets/common/duuka_app_bar.dart';
+import '../../../core/utils/post_auth_navigator.dart';
 import '../../providers/auth_provider.dart';
 
 /// OTP verification screen with 6-digit input
@@ -54,11 +55,13 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
     if (!mounted) return;
 
     if (success) {
-      final isOnboardingComplete = ref.read(isOnboardingCompleteProvider);
-      if (isOnboardingComplete) {
-        context.go('/home');
+      final authState = ref.read(authProvider);
+      if (authState.needsPinSetup) {
+        context.go('/pin/setup');
+      } else if (authState.needsPin) {
+        context.go('/pin/login');
       } else {
-        context.go('/onboarding/welcome');
+        navigateAfterAuth(context, ref);
       }
     } else {
       final error = ref.read(authProvider).error;

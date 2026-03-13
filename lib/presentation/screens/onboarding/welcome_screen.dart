@@ -83,19 +83,6 @@ class WelcomeScreen extends StatelessWidget {
                 onPressed: () => context.push('/onboarding/business-type'),
               ),
               SizedBox(height: 16.h),
-
-              // Skip Option
-              TextButton(
-                onPressed: () => context.go('/home'),
-                child: Text(
-                  DuukaStrings.skipForNow,
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.w600,
-                    color: DuukaColors.textSecondary,
-                  ),
-                ),
-              ),
             ],
           ),
         ),

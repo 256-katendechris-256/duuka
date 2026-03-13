@@ -4,6 +4,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../data/models/models.dart';
 import '../../data/repositories/product_repository.dart';
 import 'report_provider.dart';
+import 'sync_provider.dart';
 
 part 'product_provider.g.dart';
 
@@ -93,6 +94,14 @@ class Products extends _$Products {
   void _invalidateRelated() {
     ref.invalidate(lowStockProductsProvider);
     ref.invalidate(productCategoriesProvider);
+
+    // Trigger sync
+    Future.delayed(const Duration(seconds: 1), () {
+      try {
+        ref.read(syncProvider.notifier).refresh();
+        ref.read(syncProvider.notifier).sync();
+      } catch (_) {}
+    });
   }
 }
 

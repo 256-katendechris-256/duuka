@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:local_auth/local_auth.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/utils/post_auth_navigator.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/pin_provider.dart';
 
@@ -72,7 +73,7 @@ class _PinLoginScreenState extends ConsumerState<PinLoginScreen> {
       if (authenticated && mounted) {
         await ref.read(pinProvider.notifier).refresh();
         ref.read(authProvider.notifier).onPinVerified();
-        context.go('/home');
+        navigateAfterAuth(context, ref);
       }
     } catch (e) {
       // Biometric failed, user will enter PIN
@@ -84,7 +85,7 @@ class _PinLoginScreenState extends ConsumerState<PinLoginScreen> {
 
     if (success && mounted) {
       ref.read(authProvider.notifier).onPinVerified();
-      context.go('/home');
+      navigateAfterAuth(context, ref);
     } else {
       _pinController.clear();
       setState(() {});

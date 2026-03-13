@@ -37,39 +37,44 @@ const AppUserSchema = CollectionSchema(
       name: r'isActive',
       type: IsarType.bool,
     ),
-    r'lastLoginAt': PropertySchema(
+    r'isApproved': PropertySchema(
       id: 4,
+      name: r'isApproved',
+      type: IsarType.bool,
+    ),
+    r'lastLoginAt': PropertySchema(
+      id: 5,
       name: r'lastLoginAt',
       type: IsarType.dateTime,
     ),
     r'name': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'name',
       type: IsarType.string,
     ),
     r'phone': PropertySchema(
-      id: 6,
+      id: 7,
       name: r'phone',
       type: IsarType.string,
     ),
     r'photoUrl': PropertySchema(
-      id: 7,
+      id: 8,
       name: r'photoUrl',
       type: IsarType.string,
     ),
     r'remoteId': PropertySchema(
-      id: 8,
+      id: 9,
       name: r'remoteId',
       type: IsarType.string,
     ),
     r'role': PropertySchema(
-      id: 9,
+      id: 10,
       name: r'role',
       type: IsarType.byte,
       enumMap: _AppUserroleEnumValueMap,
     ),
     r'uid': PropertySchema(
-      id: 10,
+      id: 11,
       name: r'uid',
       type: IsarType.string,
     )
@@ -147,13 +152,14 @@ void _appUserSerialize(
   writer.writeDateTime(offsets[1], object.createdAt);
   writer.writeString(offsets[2], object.email);
   writer.writeBool(offsets[3], object.isActive);
-  writer.writeDateTime(offsets[4], object.lastLoginAt);
-  writer.writeString(offsets[5], object.name);
-  writer.writeString(offsets[6], object.phone);
-  writer.writeString(offsets[7], object.photoUrl);
-  writer.writeString(offsets[8], object.remoteId);
-  writer.writeByte(offsets[9], object.role.index);
-  writer.writeString(offsets[10], object.uid);
+  writer.writeBool(offsets[4], object.isApproved);
+  writer.writeDateTime(offsets[5], object.lastLoginAt);
+  writer.writeString(offsets[6], object.name);
+  writer.writeString(offsets[7], object.phone);
+  writer.writeString(offsets[8], object.photoUrl);
+  writer.writeString(offsets[9], object.remoteId);
+  writer.writeByte(offsets[10], object.role.index);
+  writer.writeString(offsets[11], object.uid);
 }
 
 AppUser _appUserDeserialize(
@@ -168,14 +174,15 @@ AppUser _appUserDeserialize(
   object.email = reader.readStringOrNull(offsets[2]);
   object.id = id;
   object.isActive = reader.readBool(offsets[3]);
-  object.lastLoginAt = reader.readDateTimeOrNull(offsets[4]);
-  object.name = reader.readStringOrNull(offsets[5]);
-  object.phone = reader.readString(offsets[6]);
-  object.photoUrl = reader.readStringOrNull(offsets[7]);
-  object.remoteId = reader.readStringOrNull(offsets[8]);
-  object.role = _AppUserroleValueEnumMap[reader.readByteOrNull(offsets[9])] ??
+  object.isApproved = reader.readBool(offsets[4]);
+  object.lastLoginAt = reader.readDateTimeOrNull(offsets[5]);
+  object.name = reader.readStringOrNull(offsets[6]);
+  object.phone = reader.readString(offsets[7]);
+  object.photoUrl = reader.readStringOrNull(offsets[8]);
+  object.remoteId = reader.readStringOrNull(offsets[9]);
+  object.role = _AppUserroleValueEnumMap[reader.readByteOrNull(offsets[10])] ??
       UserRole.owner;
-  object.uid = reader.readString(offsets[10]);
+  object.uid = reader.readString(offsets[11]);
   return object;
 }
 
@@ -195,19 +202,21 @@ P _appUserDeserializeProp<P>(
     case 3:
       return (reader.readBool(offset)) as P;
     case 4:
-      return (reader.readDateTimeOrNull(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 5:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 6:
-      return (reader.readString(offset)) as P;
-    case 7:
       return (reader.readStringOrNull(offset)) as P;
+    case 7:
+      return (reader.readString(offset)) as P;
     case 8:
       return (reader.readStringOrNull(offset)) as P;
     case 9:
+      return (reader.readStringOrNull(offset)) as P;
+    case 10:
       return (_AppUserroleValueEnumMap[reader.readByteOrNull(offset)] ??
           UserRole.owner) as P;
-    case 10:
+    case 11:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -738,6 +747,16 @@ extension AppUserQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
         property: r'isActive',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<AppUser, AppUser, QAfterFilterCondition> isApprovedEqualTo(
+      bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'isApproved',
         value: value,
       ));
     });
@@ -1619,6 +1638,18 @@ extension AppUserQuerySortBy on QueryBuilder<AppUser, AppUser, QSortBy> {
     });
   }
 
+  QueryBuilder<AppUser, AppUser, QAfterSortBy> sortByIsApproved() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isApproved', Sort.asc);
+    });
+  }
+
+  QueryBuilder<AppUser, AppUser, QAfterSortBy> sortByIsApprovedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isApproved', Sort.desc);
+    });
+  }
+
   QueryBuilder<AppUser, AppUser, QAfterSortBy> sortByLastLoginAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'lastLoginAt', Sort.asc);
@@ -1766,6 +1797,18 @@ extension AppUserQuerySortThenBy
     });
   }
 
+  QueryBuilder<AppUser, AppUser, QAfterSortBy> thenByIsApproved() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isApproved', Sort.asc);
+    });
+  }
+
+  QueryBuilder<AppUser, AppUser, QAfterSortBy> thenByIsApprovedDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'isApproved', Sort.desc);
+    });
+  }
+
   QueryBuilder<AppUser, AppUser, QAfterSortBy> thenByLastLoginAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'lastLoginAt', Sort.asc);
@@ -1878,6 +1921,12 @@ extension AppUserQueryWhereDistinct
     });
   }
 
+  QueryBuilder<AppUser, AppUser, QDistinct> distinctByIsApproved() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'isApproved');
+    });
+  }
+
   QueryBuilder<AppUser, AppUser, QDistinct> distinctByLastLoginAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'lastLoginAt');
@@ -1955,6 +2004,12 @@ extension AppUserQueryProperty
   QueryBuilder<AppUser, bool, QQueryOperations> isActiveProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'isActive');
+    });
+  }
+
+  QueryBuilder<AppUser, bool, QQueryOperations> isApprovedProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'isApproved');
     });
   }
 

@@ -72,3 +72,4 @@ local.properties
 credentials.json
 service-account*.json
 *-credentials.json
+supabase_config.json

@@ -10,16 +10,16 @@ import '../../../data/models/models.dart';
 import '../../providers/invoice_provider.dart';
 import '../../providers/customer_provider.dart';
 import '../../providers/product_provider.dart';
-import '../../providers/providers.dart';
+import '../../providers/auth_provider.dart';
 import '../../widgets/common/duuka_app_bar.dart';
 
 class CreateInvoiceScreen extends ConsumerStatefulWidget {
   final int? customerId;
 
   const CreateInvoiceScreen({
-    super.key,
+    Key? key,
     this.customerId,
-  });
+  }) : super(key: key);
 
   @override
   ConsumerState<CreateInvoiceScreen> createState() =>
@@ -49,7 +49,7 @@ class _CreateInvoiceScreenState extends ConsumerState<CreateInvoiceScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final currentUser = ref.watch(authProvider).user;
+    final currentUser = ref.watch(currentUserProvider).value;
 
     return Scaffold(
       appBar: DuukaAppBar(
@@ -144,46 +144,44 @@ class _CreateInvoiceScreenState extends ConsumerState<CreateInvoiceScreen> {
   }
 
   Widget _buildCustomerDropdown() {
-    return ref.watch(customerNotifierProvider).when(
+    return ref.watch(customersProvider).when(
           data: (customers) {
             if (customers.isEmpty) {
               return FilledButton(
-                onPressed: () => _showAddCustomerDialog(),
+                onPressed: () => context.push('/customers'),
                 child: const Text('Add a Customer First'),
               );
             }
 
-            return Column(
-              children: [
-                DropdownButtonFormField<int>(
-                  value: _selectedCustomerId,
-                  decoration: InputDecoration(
-                    labelText: 'Customer',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8.r),
-                    ),
-                  ),
-                  items: customers.map((customer) {
-                    return DropdownMenuItem(
-                      value: customer.id,
-                      child: Text(customer.displayName),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    setState(() => _selectedCustomerId = value);
-                  },
-                  hint: const Text('Select customer'),
+            // Find selected customer
+            Customer? selectedCustomer;
+            if (_selectedCustomerId != null) {
+              try {
+                selectedCustomer = customers
+                    .firstWhere((c) => c.id == _selectedCustomerId);
+              } catch (e) {
+                // ignore
+              }
+            }
+
+            return DropdownButtonFormField<int>(
+              value: _selectedCustomerId,
+              decoration: InputDecoration(
+                labelText: 'Customer',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8.r),
                 ),
-                SizedBox(height: 8.h),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton.icon(
-                    onPressed: () => _showAddCustomerDialog(),
-                    icon: Icon(Icons.person_add, size: 16.sp),
-                    label: const Text('Add New Customer'),
-                  ),
-                ),
-              ],
+              ),
+              items: customers.map((customer) {
+                return DropdownMenuItem(
+                  value: customer.id,
+                  child: Text(customer.displayName),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() => _selectedCustomerId = value);
+              },
+              hint: const Text('Select customer'),
             );
           },
           loading: () => const CircularProgressIndicator(),
@@ -191,197 +189,12 @@ class _CreateInvoiceScreenState extends ConsumerState<CreateInvoiceScreen> {
         );
   }
 
-  void _showAddCustomerDialog() {
-    final nameController = TextEditingController();
-    final phoneController = TextEditingController();
-    final locationController = TextEditingController();
-    final formKey = GlobalKey<FormState>();
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => Container(
-        decoration: BoxDecoration(
-          color: DuukaColors.surface,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
-        ),
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(ctx).viewInsets.bottom,
-        ),
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: EdgeInsets.all(20.w),
-            child: Form(
-              key: formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Handle
-                  Center(
-                    child: Container(
-                      width: 40.w,
-                      height: 4.h,
-                      decoration: BoxDecoration(
-                        color: DuukaColors.border,
-                        borderRadius: BorderRadius.circular(2.r),
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 20.h),
-
-                  Text(
-                    'Add Customer',
-                    style: TextStyle(
-                      fontSize: 20.sp,
-                      fontWeight: FontWeight.w700,
-                      color: DuukaColors.textPrimary,
-                    ),
-                  ),
-                  SizedBox(height: 20.h),
-
-                  // Name Field
-                  TextFormField(
-                    controller: nameController,
-                    textCapitalization: TextCapitalization.words,
-                    decoration: InputDecoration(
-                      labelText: 'Customer Name *',
-                      hintText: 'e.g., Mukasa John',
-                      prefixIcon: Icon(Icons.person_outline, size: 20.sp),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12.r),
-                      ),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Please enter customer name';
-                      }
-                      return null;
-                    },
-                  ),
-                  SizedBox(height: 16.h),
-
-                  // Phone Field
-                  TextFormField(
-                    controller: phoneController,
-                    keyboardType: TextInputType.phone,
-                    decoration: InputDecoration(
-                      labelText: 'Phone Number *',
-                      hintText: 'e.g., 0771234567',
-                      prefixIcon: Icon(Icons.phone_outlined, size: 20.sp),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12.r),
-                      ),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Please enter phone number';
-                      }
-                      if (value.trim().length < 10) {
-                        return 'Enter a valid phone number';
-                      }
-                      return null;
-                    },
-                  ),
-                  SizedBox(height: 16.h),
-
-                  // Location Field (Optional)
-                  TextFormField(
-                    controller: locationController,
-                    textCapitalization: TextCapitalization.words,
-                    decoration: InputDecoration(
-                      labelText: 'Location (Optional)',
-                      hintText: 'e.g., Kampala, Ntinda',
-                      prefixIcon: Icon(Icons.location_on_outlined, size: 20.sp),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12.r),
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 24.h),
-
-                  // Buttons
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () => Navigator.pop(ctx),
-                          style: OutlinedButton.styleFrom(
-                            padding: EdgeInsets.symmetric(vertical: 14.h),
-                            side: BorderSide(color: DuukaColors.border),
-                          ),
-                          child: Text(
-                            'Cancel',
-                            style: TextStyle(
-                              fontSize: 14.sp,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: 12.w),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () async {
-                            if (formKey.currentState!.validate()) {
-                              try {
-                                final newCustomer = await ref.read(customerNotifierProvider.notifier).addCustomer(
-                                  name: nameController.text.trim(),
-                                  phone: phoneController.text.trim(),
-                                  location: locationController.text.trim().isEmpty
-                                      ? null
-                                      : locationController.text.trim(),
-                                );
-                                if (ctx.mounted) {
-                                  Navigator.pop(ctx);
-                                }
-                                if (mounted) {
-                                  // Auto-select the newly created customer
-                                  if (newCustomer != null) {
-                                    setState(() => _selectedCustomerId = newCustomer.id);
-                                  }
-                                  context.showSuccessSnackBar('Customer added successfully');
-                                }
-                              } catch (e) {
-                                if (mounted) {
-                                  context.showErrorSnackBar(e.toString());
-                                }
-                              }
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: DuukaColors.primary,
-                            padding: EdgeInsets.symmetric(vertical: 14.h),
-                          ),
-                          child: Text(
-                            'Add Customer',
-                            style: TextStyle(
-                              fontSize: 14.sp,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 20.h),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildDueDatePicker() {
     return InkWell(
       onTap: () async {
         final date = await showDatePicker(
           context: context,
-          initialDate: _dueDate ?? DateTime.now().add(const Duration(days: 7)),
+          initialDate: _dueDate ?? DateTime.now().add(Duration(days: 7)),
           firstDate: DateTime.now(),
           lastDate: DateTime.now().add(const Duration(days: 365)),
         );
@@ -500,7 +313,7 @@ class _CreateInvoiceScreenState extends ConsumerState<CreateInvoiceScreen> {
                 keyboardType: TextInputType.number,
                 decoration: InputDecoration(
                   labelText: 'Fixed Discount',
-                  prefixText: 'UGX ',
+                  prefixText: 'KES ',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8.r),
                   ),
@@ -520,7 +333,7 @@ class _CreateInvoiceScreenState extends ConsumerState<CreateInvoiceScreen> {
           keyboardType: TextInputType.number,
           decoration: InputDecoration(
             labelText: 'Tax/VAT',
-            prefixText: 'UGX ',
+            prefixText: 'KES ',
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8.r),
             ),
@@ -617,14 +430,10 @@ class _CreateInvoiceScreenState extends ConsumerState<CreateInvoiceScreen> {
     }
 
     try {
-      final customers = ref.read(customerNotifierProvider).value ?? [];
-      Customer? customer;
-      for (final c in customers) {
-        if (c.id == _selectedCustomerId) {
-          customer = c;
-          break;
-        }
-      }
+      final customer = await ref.read(customersProvider).value?.firstWhere(
+            (c) => c.id == _selectedCustomerId,
+            orElse: () => null as dynamic,
+          );
 
       // Generate invoice number
       final invoiceNumber =
@@ -666,8 +475,9 @@ class _AddItemDialog extends ConsumerStatefulWidget {
   final Function(InvoiceItem) onAdd;
 
   const _AddItemDialog({
+    Key? key,
     required this.onAdd,
-  });
+  }) : super(key: key);
 
   @override
   ConsumerState<_AddItemDialog> createState() => _AddItemDialogState();
@@ -714,7 +524,7 @@ class _AddItemDialogState extends ConsumerState<_AddItemDialog> {
                         _selectedProduct = value;
                         if (value != null) {
                           _priceController.text =
-                              value.sellPrice.toStringAsFixed(0);
+                              value.sellPrice.toStringAsFixed(2);
                         }
                       });
                     },
@@ -742,7 +552,7 @@ class _AddItemDialogState extends ConsumerState<_AddItemDialog> {
               keyboardType: TextInputType.number,
               decoration: InputDecoration(
                 labelText: 'Unit Price',
-                prefixText: 'UGX ',
+                prefixText: 'KES ',
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8.r),
                 ),

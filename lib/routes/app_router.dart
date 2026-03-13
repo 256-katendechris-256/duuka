@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../presentation/screens/splash/splash_screen.dart';
 import '../presentation/screens/auth/login_screen.dart';
 import '../presentation/screens/auth/otp_screen.dart';
+import '../presentation/screens/auth/pending_approval_screen.dart';
 import '../presentation/screens/auth/pin_setup_screen.dart';
 import '../presentation/screens/auth/pin_login_screen.dart';
 import '../presentation/screens/onboarding/welcome_screen.dart';
@@ -13,6 +14,7 @@ import '../presentation/screens/onboarding/business_details_screen.dart';
 import '../presentation/screens/onboarding/business_size_screen.dart';
 import '../presentation/screens/onboarding/location_screen.dart';
 import '../presentation/screens/onboarding/setup_complete_screen.dart';
+import '../presentation/screens/onboarding/pin_setup_onboarding_screen.dart';
 import '../presentation/screens/home/home_screen.dart';
 import '../presentation/screens/inventory/inventory_screen.dart';
 import '../presentation/screens/inventory/add_product_screen.dart';
@@ -87,6 +89,10 @@ GoRouter _createRouter() {
           return OtpScreen(phoneNumber: phoneNumber);
         },
       ),
+      GoRoute(
+        path: '/pending-approval',
+        builder: (context, state) => const PendingApprovalScreen(),
+      ),
 
       // PIN Routes
       GoRoute(
@@ -118,6 +124,10 @@ GoRouter _createRouter() {
       GoRoute(
         path: '/onboarding/location',
         builder: (context, state) => const LocationScreen(),
+      ),
+      GoRoute(
+        path: '/onboarding/pin-setup',
+        builder: (context, state) => const PinSetupOnboardingScreen(),
       ),
       GoRoute(
         path: '/onboarding/complete',

@@ -6,6 +6,7 @@ import '../../data/repositories/return_repository.dart';
 import 'product_provider.dart';
 import 'sale_provider.dart';
 import 'report_provider.dart';
+import 'sync_provider.dart';
 
 /// Repository provider
 final returnRepositoryProvider = Provider<ReturnRepository>((ref) {
@@ -131,6 +132,14 @@ class ReturnsNotifier extends Notifier<AsyncValue<List<ProductReturn>>> {
     ref.invalidate(reportSummaryProvider);
     ref.invalidate(periodTotalsProvider);
     ref.invalidate(dailySalesChartProvider);
+
+    // Trigger sync
+    Future.delayed(const Duration(seconds: 1), () {
+      try {
+        ref.read(syncProvider.notifier).refresh();
+        ref.read(syncProvider.notifier).sync();
+      } catch (_) {}
+    });
   }
 }
 

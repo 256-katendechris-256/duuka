@@ -10,6 +10,7 @@ import '../../../core/extensions/context_extensions.dart';
 import '../../widgets/common/duuka_button.dart';
 import '../../widgets/common/duuka_text_field.dart';
 import '../../providers/auth_provider.dart';
+import '../../../core/utils/post_auth_navigator.dart';
 
 /// Login screen with phone authentication
 class LoginScreen extends ConsumerStatefulWidget {
@@ -66,9 +67,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       } else if (authState.needsPin) {
         print('🟢 LoginScreen: Navigating to /pin/login');
         context.go('/pin/login');
-      } else if (authState.isAuthenticated) {
-        print('🟢 LoginScreen: Navigating to /home');
-        context.go('/home');
+      } else if (authState.isAuthenticated || authState.status == AuthStatus.pendingApproval) {
+        print('🟢 LoginScreen: Auth complete, checking onboarding/approval...');
+        navigateAfterAuth(context, ref);
       } else {
         print('🔴 LoginScreen: No navigation condition matched!');
       }

@@ -7,6 +7,7 @@ import '../../data/repositories/sale_repository.dart';
 import 'sale_provider.dart';
 import 'customer_provider.dart';
 import 'report_provider.dart';
+import 'sync_provider.dart';
 
 final creditRepositoryProvider = Provider<CreditRepository>((ref) {
   return CreditRepository();
@@ -288,6 +289,14 @@ class CreditNotifier extends StateNotifier<AsyncValue<CreditSummary>> {
     _ref.invalidate(reportSummaryProvider);
     _ref.invalidate(periodTotalsProvider);
     _ref.invalidate(paymentBreakdownProvider);
+
+    // Trigger sync
+    Future.delayed(const Duration(seconds: 1), () {
+      try {
+        _ref.read(syncProvider.notifier).refresh();
+        _ref.read(syncProvider.notifier).sync();
+      } catch (_) {}
+    });
   }
 }
 

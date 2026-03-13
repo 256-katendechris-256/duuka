@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/extensions/context_extensions.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../data/models/models.dart';
 import '../../providers/invoice_provider.dart';
@@ -11,7 +12,7 @@ import '../../widgets/common/duuka_app_bar.dart';
 import '../../widgets/common/empty_state.dart';
 
 class InvoicesListScreen extends ConsumerStatefulWidget {
-  const InvoicesListScreen({super.key});
+  const InvoicesListScreen({Key? key}) : super(key: key);
 
   @override
   ConsumerState<InvoicesListScreen> createState() => _InvoicesListScreenState();
@@ -110,12 +111,12 @@ class _InvoicesListScreenState extends ConsumerState<InvoicesListScreen>
           data: (invoices) {
             if (invoices.isEmpty) {
               return const EmptyState(
-                icon: Icons.description_outlined,
+                icon: Icons.receipt_long_outlined,
                 title: 'No Invoices',
                 description: 'Create your first invoice',
               );
             }
-
+            
             final filtered = _searchQuery.isEmpty
                 ? invoices
                 : invoices
@@ -172,7 +173,7 @@ class _InvoicesListScreenState extends ConsumerState<InvoicesListScreen>
     return ref.watch(pendingInvoicesProvider).when(
           data: (invoices) => invoices.isEmpty
               ? const EmptyState(
-                  icon: Icons.hourglass_empty,
+                  icon: Icons.schedule,
                   title: 'No Pending Invoices',
                   description: 'All invoices are paid!',
                 )
@@ -214,7 +215,7 @@ class _InvoicesListScreenState extends ConsumerState<InvoicesListScreen>
     return ref.watch(overdueInvoicesProvider).when(
           data: (invoices) => invoices.isEmpty
               ? const EmptyState(
-                  icon: Icons.schedule,
+                  icon: Icons.event_busy,
                   title: 'No Overdue Invoices',
                   description: 'Great! All payments are on time',
                 )
@@ -241,7 +242,7 @@ class _InvoicesListScreenState extends ConsumerState<InvoicesListScreen>
         leading: Container(
           width: 50.w,
           decoration: BoxDecoration(
-            color: statusColor.withValues(alpha: 0.2),
+            color: statusColor.withOpacity(0.2),
             borderRadius: BorderRadius.circular(8.r),
           ),
           child: Center(
@@ -290,7 +291,7 @@ class _InvoicesListScreenState extends ConsumerState<InvoicesListScreen>
             Container(
               padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
               decoration: BoxDecoration(
-                color: statusColor.withValues(alpha: 0.2),
+                color: statusColor.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(4.r),
               ),
               child: Text(
@@ -304,7 +305,8 @@ class _InvoicesListScreenState extends ConsumerState<InvoicesListScreen>
             ),
           ],
         ),
-        onTap: () => context.push('/invoice/${invoice.id}'),
+        onTap: () =>
+            context.push('/invoice/${invoice.id}'),
       ),
     );
   }
