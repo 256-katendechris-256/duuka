@@ -12,19 +12,6 @@ enum InvoiceStatus {
   cancelled   // Cancelled by merchant
 }
 
-extension InvoiceStatusX on InvoiceStatus {
-  String get label {
-    switch (this) {
-      case InvoiceStatus.draft: return 'Draft';
-      case InvoiceStatus.sent: return 'Sent';
-      case InvoiceStatus.partial: return 'Partial';
-      case InvoiceStatus.paid: return 'Paid';
-      case InvoiceStatus.overdue: return 'Overdue';
-      case InvoiceStatus.cancelled: return 'Cancelled';
-    }
-  }
-}
-
 enum InvoicePaymentMethod { cash, mobileMoney, bankTransfer, other }
 
 /// Invoice - Quotation/Order sent to customer with payment terms
@@ -95,18 +82,6 @@ class Invoice {
   
   /// Whether invoice is overdue
   bool get isOverdue => dueAt != null && dueAt!.isBefore(DateTime.now()) && !isPaid;
-
-  /// Whether the user can record a payment (sent, partial, or overdue and not cancelled)
-  bool get canRecordPayment =>
-      status != InvoiceStatus.draft &&
-      status != InvoiceStatus.paid &&
-      status != InvoiceStatus.cancelled;
-
-  /// When the invoice was sent to the customer (for sync)
-  DateTime? sentAt;
-
-  /// When the invoice was cancelled (for sync)
-  DateTime? cancelledAt;
 
   Invoice();
 

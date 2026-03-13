@@ -213,7 +213,7 @@ class _CreateInvoiceScreenState extends ConsumerState<CreateInvoiceScreen> {
         child: Text(
           _dueDate == null
               ? 'Tap to select'
-              : DuukaFormatters.date(_dueDate!),
+              : Formatters.formatDate(_dueDate!),
         ),
       ),
     );
@@ -261,14 +261,14 @@ class _CreateInvoiceScreenState extends ConsumerState<CreateInvoiceScreen> {
                         style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12.sp),
                       ),
                       Text(
-                        '${item.quantity} ${item.unit} x ${DuukaFormatters.currency(item.unitPrice)}',
+                        '${item.quantity} ${item.unit} x ${Formatters.formatCurrency(item.unitPrice)}',
                         style: TextStyle(fontSize: 11.sp, color: Colors.grey),
                       ),
                     ],
                   ),
                 ),
                 Text(
-                  DuukaFormatters.currency(item.total),
+                  Formatters.formatCurrency(item.total),
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12.sp),
                 ),
                 IconButton(
@@ -388,7 +388,7 @@ class _CreateInvoiceScreenState extends ConsumerState<CreateInvoiceScreen> {
           ),
         ),
         Text(
-          DuukaFormatters.currency(amount),
+          Formatters.formatCurrency(amount),
           style: TextStyle(
             fontSize: isTotal ? 14.sp : 12.sp,
             fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,

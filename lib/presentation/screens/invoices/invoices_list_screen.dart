@@ -111,7 +111,6 @@ class _InvoicesListScreenState extends ConsumerState<InvoicesListScreen>
           data: (invoices) {
             if (invoices.isEmpty) {
               return const EmptyState(
-                icon: Icons.receipt_long_outlined,
                 title: 'No Invoices',
                 description: 'Create your first invoice',
               );
@@ -128,7 +127,6 @@ class _InvoicesListScreenState extends ConsumerState<InvoicesListScreen>
 
             if (filtered.isEmpty) {
               return const EmptyState(
-                icon: Icons.search_off,
                 title: 'No Results',
                 description: 'Try a different search',
               );
@@ -152,7 +150,6 @@ class _InvoicesListScreenState extends ConsumerState<InvoicesListScreen>
     return ref.watch(draftInvoicesProvider).when(
           data: (invoices) => invoices.isEmpty
               ? const EmptyState(
-                  icon: Icons.edit_note,
                   title: 'No Draft Invoices',
                   description: 'Create a new invoice',
                 )
@@ -173,7 +170,6 @@ class _InvoicesListScreenState extends ConsumerState<InvoicesListScreen>
     return ref.watch(pendingInvoicesProvider).when(
           data: (invoices) => invoices.isEmpty
               ? const EmptyState(
-                  icon: Icons.schedule,
                   title: 'No Pending Invoices',
                   description: 'All invoices are paid!',
                 )
@@ -194,7 +190,6 @@ class _InvoicesListScreenState extends ConsumerState<InvoicesListScreen>
     return ref.watch(paidInvoicesProvider).when(
           data: (invoices) => invoices.isEmpty
               ? const EmptyState(
-                  icon: Icons.check_circle_outline,
                   title: 'No Paid Invoices',
                   description: 'Send invoices to customers',
                 )
@@ -215,7 +210,6 @@ class _InvoicesListScreenState extends ConsumerState<InvoicesListScreen>
     return ref.watch(overdueInvoicesProvider).when(
           data: (invoices) => invoices.isEmpty
               ? const EmptyState(
-                  icon: Icons.event_busy,
                   title: 'No Overdue Invoices',
                   description: 'Great! All payments are on time',
                 )
@@ -270,7 +264,7 @@ class _InvoicesListScreenState extends ConsumerState<InvoicesListScreen>
               style: TextStyle(fontSize: 12.sp, color: Colors.grey),
             ),
             Text(
-              DuukaFormatters.date(invoice.createdAt),
+              Formatters.formatDate(invoice.createdAt),
               style: TextStyle(fontSize: 11.sp, color: Colors.grey[600]),
             ),
           ],
@@ -280,11 +274,11 @@ class _InvoicesListScreenState extends ConsumerState<InvoicesListScreen>
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             Text(
-              DuukaFormatters.currency(invoice.total),
+              Formatters.formatCurrency(invoice.total),
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 14.sp,
-                color: DuukaColors.primary,
+                color: AppColors.primary,
               ),
             ),
             SizedBox(height: 4.h),
