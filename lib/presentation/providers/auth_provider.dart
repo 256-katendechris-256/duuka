@@ -331,6 +331,15 @@ class Auth extends _$Auth {
   }
 
   Future<bool> signInWithGoogle() async {
+    if (SupabaseService.isAuthenticated) {
+      final existing = SupabaseService.currentSession;
+      if (existing != null) {
+        print('🟣 Google Sign-In: already authenticated, reusing session');
+        await _handleSignIn(existing);
+        return true;
+      }
+    }
+
     state = state.copyWith(status: AuthStatus.loading, clearError: true);
     print('🔵 Google Sign-In: Starting...');
 

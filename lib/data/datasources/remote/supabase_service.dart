@@ -1,14 +1,10 @@
-import 'dart:io' show Platform;
 import 'dart:async';
-import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:google_sign_in/google_sign_in.dart';
+import 'package:flutter/foundation.dart' show debugPrint, kDebugMode, kIsWeb;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class SupabaseService {
-  static GoogleSignIn? _googleSignIn;
   static SupabaseClient? _client;
-  static String? _googleWebClientId;
   static String? _supabaseUrl;
 
   static bool get isInitialized => _client != null;
@@ -22,7 +18,7 @@ class SupabaseService {
 
   static GoTrueClient get auth => client.auth;
 
-  /// Handle OAuth redirect deep link (desktop) and exchange code for session.
+  /// Handle OAuth redirect deep link (mobile + desktop) and exchange code for session.
   /// Returns true if the link was recognized and processed.
   static Future<bool> handleAuthDeepLink(Uri uri) async {
     try {
@@ -35,20 +31,29 @@ class SupabaseService {
         throw Exception('Missing OAuth code in callback URL');
       }
 
+      // supabase_flutter already processes OAuth deeplinks automatically on mobile.
+      // If a session exists, avoid exchanging code again (prevents flow_state_not_found).
+      if (!kIsWeb && auth.currentSession != null) {
+        print('🟣 Deep link received but session already exists; skipping manual exchange');
+        return true;
+      }
+
       print('🟣 Handling OAuth deep link callback (code present: true)');
       await auth.exchangeCodeForSession(code);
       print('🟢 OAuth code exchanged for session');
       return true;
+    } on AuthApiException catch (e) {
+      if (e.code == 'flow_state_not_found') {
+        // Harmless when callback is handled twice (SDK + app_links listener).
+        print('🟡 Ignoring duplicate OAuth callback: ${e.message}');
+        return true;
+      }
+      print('🔴 Failed to handle auth deep link: $e');
+      rethrow;
     } catch (e) {
       print('🔴 Failed to handle auth deep link: $e');
       rethrow;
     }
-  }
-
-  /// Check if running on desktop platform
-  static bool get isDesktop {
-    if (kIsWeb) return false;
-    return Platform.isWindows || Platform.isLinux || Platform.isMacOS;
   }
 
   static Future<void> initialize({
@@ -56,9 +61,10 @@ class SupabaseService {
     required String anonKey,
     String? googleWebClientId,
   }) async {
-    _googleWebClientId = googleWebClientId;
-    // Guard against misconfigured env vars (e.g. missing scheme).
-    // If SUPABASE_URL is provided as "project-ref.supabase.co", force https.
+    // Kept for bundled config compatibility; browser OAuth uses Supabase + GCP Web client from dashboard.
+    if (kDebugMode && googleWebClientId != null && googleWebClientId.isNotEmpty) {
+      debugPrint('SupabaseService: googleWebClientId present (browser OAuth; native SHA not required).');
+    }
     final normalizedUrl = url.trim().startsWith(RegExp(r'https?://'))
         ? url.trim()
         : 'https://${url.trim()}';
@@ -72,13 +78,6 @@ class SupabaseService {
       ),
     );
     _client = Supabase.instance.client;
-
-    // Initialize Google Sign-In if web client ID is provided (for mobile only)
-    if (!isDesktop && googleWebClientId != null && googleWebClientId.isNotEmpty) {
-      _googleSignIn = GoogleSignIn(
-        serverClientId: googleWebClientId,
-      );
-    }
   }
 
   /// Get current session (null when not initialized or signed out)
@@ -124,40 +123,53 @@ class SupabaseService {
     );
   }
 
-  /// Sign in with Google
-  /// On desktop, uses browser-based OAuth. On mobile, uses native Google Sign-In.
+  /// Sign in with Google via Supabase OAuth (browser / Custom Tabs).
+  /// Avoids native `google_sign_in` + Android OAuth SHA fingerprint issues.
   static Future<AuthResponse> signInWithGoogle() async {
     print('🔵 SupabaseService.signInWithGoogle: Starting...');
-    print('🔵 Platform: isDesktop=$isDesktop');
-
-    if (isDesktop) {
-      // Desktop: Use browser-based OAuth
-      return await _signInWithGoogleDesktop();
-    } else {
-      // Mobile: Use native Google Sign-In
-      return await _signInWithGoogleMobile();
+    if (auth.currentSession != null) {
+      print('🟣 Existing session found; skipping OAuth launch');
+      return AuthResponse(session: auth.currentSession, user: auth.currentUser);
     }
+    if (kIsWeb) {
+      return await _signInWithGoogleWeb();
+    }
+    return await _signInWithGoogleOAuth();
   }
 
-  /// Desktop Google Sign-In using browser-based OAuth
-  static Future<AuthResponse> _signInWithGoogleDesktop() async {
-    print('🔵 Using browser-based OAuth for desktop...');
+  static Future<AuthResponse> _signInWithGoogleWeb() async {
+    print('🔵 Using OAuth for web...');
+    final redirectTo = Uri.base.origin;
+    final res = await auth.signInWithOAuth(
+      OAuthProvider.google,
+      redirectTo: redirectTo.toString(),
+    );
+    if (!res) {
+      throw Exception('Failed to initiate Google Sign-In');
+    }
+    final state = await auth.onAuthStateChange
+        .timeout(
+          const Duration(minutes: 5),
+          onTimeout: (sink) {
+            sink.addError(Exception('OAuth timeout'));
+          },
+        )
+        .firstWhere((s) => s.event == AuthChangeEvent.signedIn);
+    if (state.session == null) {
+      throw Exception('No session after Google Sign-In');
+    }
+    return AuthResponse(session: state.session, user: state.session?.user);
+  }
 
-    // For desktop OAuth with Supabase:
-    // 1. The redirect URI in Google Cloud Console should be: 
-    //    https://iellujtngoahicjgdexr.supabase.co/auth/v1/callback
-    // 2. Supabase will handle the OAuth callback and redirect to a deep link
-    // 3. We use a custom deep link scheme that the app can handle
-    // 4. The deep link must be registered in Supabase dashboard under Redirect URLs
-    
-    // Use a deep link scheme for desktop callback
-    // This must be registered in Supabase Dashboard > Authentication > URL Configuration > Redirect URLs
+  /// Google Sign-In (Android, iOS, desktop): browser-based OAuth + deep link or redirect.
+  static Future<AuthResponse> _signInWithGoogleOAuth() async {
+    print('🔵 Using browser-based OAuth (Supabase + Google)...');
+
+    // Register in Supabase Dashboard → Authentication → URL Configuration → Redirect URLs.
     const deepLinkScheme = 'duuka://login-callback';
-    
-    print('🔵 Using deep link callback: $deepLinkScheme');
-    
-    // Use Supabase's OAuth flow which opens the default browser
-    // After Google OAuth completes, Supabase will redirect to the deep link
+
+    print('🔵 Using redirect callback: $deepLinkScheme');
+
     final res = await auth.signInWithOAuth(
       OAuthProvider.google,
       redirectTo: deepLinkScheme,
@@ -168,91 +180,38 @@ class SupabaseService {
       throw Exception('Failed to initiate Google Sign-In');
     }
 
-    // Wait for the auth state to change (user completes login in browser)
-    // The deep link will trigger Supabase to complete the auth flow
-    print('🔵 Waiting for auth callback via deep link...');
-    
-    // Set a timeout to prevent hanging forever
+    print('🔵 Waiting for auth callback...');
+
     try {
-      final completer = await auth.onAuthStateChange
+      final state = await auth.onAuthStateChange
           .timeout(
             const Duration(minutes: 5),
             onTimeout: (sink) {
-              sink.addError(Exception('OAuth timeout - please complete login in browser and ensure deep link is configured'));
+              sink.addError(Exception(
+                'OAuth timeout — complete sign-in in the browser and ensure redirect URL is allowed in Supabase.',
+              ));
             },
           )
-          .firstWhere(
-            (state) => state.event == AuthChangeEvent.signedIn,
-          );
+          .firstWhere((s) => s.event == AuthChangeEvent.signedIn);
 
-      if (completer.session == null) {
+      if (state.session == null) {
         throw Exception('No session after Google Sign-In');
       }
 
-      print('🟢 Desktop Google Sign-In complete');
-      return AuthResponse(session: completer.session, user: completer.session?.user);
+      print('🟢 Google Sign-In complete');
+      return AuthResponse(session: state.session, user: state.session?.user);
     } catch (e) {
-      print('🔴 Desktop OAuth error: $e');
+      print('🔴 OAuth error: $e');
       rethrow;
     }
   }
 
-  /// Mobile Google Sign-In using native SDK
-  static Future<AuthResponse> _signInWithGoogleMobile() async {
-    print('🔵 Using native Google Sign-In for mobile...');
-
-    if (_googleSignIn == null) {
-      print('🔴 Google Sign-In not initialized');
-      throw Exception(
-        'Google Sign-In not initialized. Provide googleWebClientId in initialize().',
-      );
-    }
-
-    // Trigger Google Sign-In flow
-    print('🔵 Triggering Google Sign-In flow...');
-    final googleUser = await _googleSignIn!.signIn();
-    if (googleUser == null) {
-      print('🔴 Google Sign-In was cancelled by user');
-      throw Exception('Google Sign-In was cancelled.');
-    }
-    print('🟢 Got Google user: ${googleUser.email}');
-
-    // Get auth details from Google
-    print('🔵 Getting Google auth tokens...');
-    final googleAuth = await googleUser.authentication;
-    final idToken = googleAuth.idToken;
-    final accessToken = googleAuth.accessToken;
-    print('🟢 Got tokens - idToken: ${idToken != null}, accessToken: ${accessToken != null}');
-
-    if (idToken == null) {
-      print('🔴 No ID token from Google');
-      throw Exception('Failed to get ID token from Google.');
-    }
-
-    // Sign in to Supabase with the Google ID token
-    print('🔵 Signing in to Supabase with Google token...');
-    final response = await auth.signInWithIdToken(
-      provider: OAuthProvider.google,
-      idToken: idToken,
-      accessToken: accessToken,
-    );
-    print('🟢 Supabase sign-in complete');
-
-    return response;
-  }
-
-  /// Sign out from Google (call this alongside regular signOut)
-  static Future<void> signOutGoogle() async {
-    if (_googleSignIn != null) {
-      await _googleSignIn!.signOut();
-    }
-  }
+  /// Sign out from Google (native flow unused; kept for API compatibility)
+  static Future<void> signOutGoogle() async {}
 
   /// Sign out
   static Future<void> signOut() async {
-    // Sign out from Google if active
     await signOutGoogle();
-    // Sign out from Supabase
     await auth.signOut();
   }
 

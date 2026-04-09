@@ -157,8 +157,8 @@ class _CreateInvoiceScreenState extends ConsumerState<CreateInvoiceScreen> {
             Customer? selectedCustomer;
             if (_selectedCustomerId != null) {
               try {
-                selectedCustomer = customers
-                    .firstWhere((c) => c.id == _selectedCustomerId);
+                selectedCustomer =
+                    customers.firstWhere((c) => c.id == _selectedCustomerId);
               } catch (e) {
                 // ignore
               }
@@ -211,9 +211,7 @@ class _CreateInvoiceScreenState extends ConsumerState<CreateInvoiceScreen> {
           suffixIcon: const Icon(Icons.calendar_today),
         ),
         child: Text(
-          _dueDate == null
-              ? 'Tap to select'
-              : Formatters.formatDate(_dueDate!),
+          _dueDate == null ? 'Tap to select' : DuukaFormatters.date(_dueDate!),
         ),
       ),
     );
@@ -258,18 +256,20 @@ class _CreateInvoiceScreenState extends ConsumerState<CreateInvoiceScreen> {
                     children: [
                       Text(
                         item.productName,
-                        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12.sp),
+                        style: TextStyle(
+                            fontWeight: FontWeight.w600, fontSize: 12.sp),
                       ),
                       Text(
-                        '${item.quantity} ${item.unit} x ${Formatters.formatCurrency(item.unitPrice)}',
+                        '${item.quantity} ${item.unit} x ${DuukaFormatters.currency(item.unitPrice)}',
                         style: TextStyle(fontSize: 11.sp, color: Colors.grey),
                       ),
                     ],
                   ),
                 ),
                 Text(
-                  Formatters.formatCurrency(item.total),
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12.sp),
+                  DuukaFormatters.currency(item.total),
+                  style:
+                      TextStyle(fontWeight: FontWeight.bold, fontSize: 12.sp),
                 ),
                 IconButton(
                   icon: const Icon(Icons.close, size: 18),
@@ -388,7 +388,7 @@ class _CreateInvoiceScreenState extends ConsumerState<CreateInvoiceScreen> {
           ),
         ),
         Text(
-          Formatters.formatCurrency(amount),
+          DuukaFormatters.currency(amount),
           style: TextStyle(
             fontSize: isTotal ? 14.sp : 12.sp,
             fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
@@ -413,7 +413,8 @@ class _CreateInvoiceScreenState extends ConsumerState<CreateInvoiceScreen> {
   double get subtotal => _cartItems.fold(0, (sum, item) => sum + item.total);
   double get total => subtotal - _discount + _taxAmount;
 
-  Future<void> _submitInvoice(BuildContext context, AppUser? currentUser) async {
+  Future<void> _submitInvoice(
+      BuildContext context, AppUser? currentUser) async {
     if (currentUser == null) {
       context.showErrorSnackBar('User not authenticated');
       return;
@@ -436,8 +437,7 @@ class _CreateInvoiceScreenState extends ConsumerState<CreateInvoiceScreen> {
           );
 
       // Generate invoice number
-      final invoiceNumber =
-          await ref.read(nextInvoiceNumberProvider.future);
+      final invoiceNumber = await ref.read(nextInvoiceNumberProvider.future);
 
       // Create invoice
       final invoice = Invoice.create(

@@ -4,12 +4,12 @@ import 'product.dart' show SyncStatus;
 part 'invoice.g.dart';
 
 enum InvoiceStatus {
-  draft,      // Not yet sent to customer
-  sent,       // Sent to customer but not paid
-  partial,    // Partially paid
-  paid,       // Fully paid
-  overdue,    // Payment due date passed
-  cancelled   // Cancelled by merchant
+  draft, // Not yet sent to customer
+  sent, // Sent to customer but not paid
+  partial, // Partially paid
+  paid, // Fully paid
+  overdue, // Payment due date passed
+  cancelled // Cancelled by merchant
 }
 
 enum InvoicePaymentMethod { cash, mobileMoney, bankTransfer, other }
@@ -61,7 +61,13 @@ class Invoice {
 
   DateTime? updatedAt;
 
-  /// When invoice was converted to Sale (if paid)
+  // When invoice was sent to customer
+  DateTime? sentAt;
+
+  // When invoice was cancelled
+  DateTime? cancelledAt;
+
+  // When invoice was converted to Sale (if paid)
   DateTime? convertedToSaleAt;
   int? saleId; // Reference to Sale record
 
@@ -69,19 +75,25 @@ class Invoice {
 
   // Computed properties
   int get itemCount => items.length;
-  double get totalQuantity => items.fold(0.0, (sum, item) => sum + item.quantity);
-  
+  double get totalQuantity =>
+      items.fold(0.0, (sum, item) => sum + item.quantity);
+
   /// Remaining balance that needs to be paid
   double get remainingBalance => total - amountPaid;
-  
+
   /// Percentage of invoice paid
   double get paymentPercentage => total > 0 ? (amountPaid / total) * 100 : 0;
-  
+
   /// Whether invoice is fully paid
   bool get isPaid => remainingBalance <= 0;
-  
+
   /// Whether invoice is overdue
-  bool get isOverdue => dueAt != null && dueAt!.isBefore(DateTime.now()) && !isPaid;
+  bool get isOverdue =>
+      dueAt != null && dueAt!.isBefore(DateTime.now()) && !isPaid;
+
+  /// Whether a payment can be recorded for this invoice
+  /// Returns true if invoice is not draft and not already fully paid
+  bool get canRecordPayment => status != InvoiceStatus.draft && !isPaid;
 
   Invoice();
 
@@ -100,14 +112,15 @@ class Invoice {
     this.taxAmount = 0,
     this.dueAt,
     this.notes,
-  }) : createdAt = DateTime.now(),
-       status = InvoiceStatus.draft,
-       amountPaid = 0 {
+  })  : createdAt = DateTime.now(),
+        status = InvoiceStatus.draft,
+        amountPaid = 0 {
     balance = total;
   }
 
   @override
-  String toString() => 'Invoice(id: $id, invoiceNumber: $invoiceNumber, status: $status, total: $total)';
+  String toString() =>
+      'Invoice(id: $id, invoiceNumber: $invoiceNumber, status: $status, total: $total)';
 }
 
 /// Invoice line item (similar to SaleItem but for invoices)
@@ -181,5 +194,6 @@ class InvoicePayment {
   }) : paidAt = DateTime.now();
 
   @override
-  String toString() => 'InvoicePayment(amount: $amount, method: $method, date: $paidAt)';
+  String toString() =>
+      'InvoicePayment(amount: $amount, method: $method, date: $paidAt)';
 }

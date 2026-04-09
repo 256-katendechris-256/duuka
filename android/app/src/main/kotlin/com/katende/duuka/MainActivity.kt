@@ -1,4 +1,4 @@
-package com.example.duuka
+package com.katende.duuka
 
 import io.flutter.embedding.android.FlutterActivity
 

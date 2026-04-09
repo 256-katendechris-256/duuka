@@ -27,152 +27,167 @@ const InvoiceSchema = CollectionSchema(
       name: r'balance',
       type: IsarType.double,
     ),
-    r'convertedToSaleAt': PropertySchema(
+    r'canRecordPayment': PropertySchema(
       id: 2,
+      name: r'canRecordPayment',
+      type: IsarType.bool,
+    ),
+    r'cancelledAt': PropertySchema(
+      id: 3,
+      name: r'cancelledAt',
+      type: IsarType.dateTime,
+    ),
+    r'convertedToSaleAt': PropertySchema(
+      id: 4,
       name: r'convertedToSaleAt',
       type: IsarType.dateTime,
     ),
     r'createdAt': PropertySchema(
-      id: 3,
+      id: 5,
       name: r'createdAt',
       type: IsarType.dateTime,
     ),
     r'customerId': PropertySchema(
-      id: 4,
+      id: 6,
       name: r'customerId',
       type: IsarType.long,
     ),
     r'customerName': PropertySchema(
-      id: 5,
+      id: 7,
       name: r'customerName',
       type: IsarType.string,
     ),
     r'customerPhone': PropertySchema(
-      id: 6,
+      id: 8,
       name: r'customerPhone',
       type: IsarType.string,
     ),
     r'discount': PropertySchema(
-      id: 7,
+      id: 9,
       name: r'discount',
       type: IsarType.double,
     ),
     r'discountPercent': PropertySchema(
-      id: 8,
+      id: 10,
       name: r'discountPercent',
       type: IsarType.double,
     ),
     r'dueAt': PropertySchema(
-      id: 9,
+      id: 11,
       name: r'dueAt',
       type: IsarType.dateTime,
     ),
     r'invoiceNumber': PropertySchema(
-      id: 10,
+      id: 12,
       name: r'invoiceNumber',
       type: IsarType.string,
     ),
     r'isOverdue': PropertySchema(
-      id: 11,
+      id: 13,
       name: r'isOverdue',
       type: IsarType.bool,
     ),
     r'isPaid': PropertySchema(
-      id: 12,
+      id: 14,
       name: r'isPaid',
       type: IsarType.bool,
     ),
     r'issuedAt': PropertySchema(
-      id: 13,
+      id: 15,
       name: r'issuedAt',
       type: IsarType.dateTime,
     ),
     r'itemCount': PropertySchema(
-      id: 14,
+      id: 16,
       name: r'itemCount',
       type: IsarType.long,
     ),
     r'items': PropertySchema(
-      id: 15,
+      id: 17,
       name: r'items',
       type: IsarType.objectList,
       target: r'InvoiceItem',
     ),
     r'notes': PropertySchema(
-      id: 16,
+      id: 18,
       name: r'notes',
       type: IsarType.string,
     ),
     r'paymentPercentage': PropertySchema(
-      id: 17,
+      id: 19,
       name: r'paymentPercentage',
       type: IsarType.double,
     ),
     r'payments': PropertySchema(
-      id: 18,
+      id: 20,
       name: r'payments',
       type: IsarType.objectList,
       target: r'InvoicePayment',
     ),
     r'remainingBalance': PropertySchema(
-      id: 19,
+      id: 21,
       name: r'remainingBalance',
       type: IsarType.double,
     ),
     r'remoteId': PropertySchema(
-      id: 20,
+      id: 22,
       name: r'remoteId',
       type: IsarType.string,
     ),
     r'saleId': PropertySchema(
-      id: 21,
+      id: 23,
       name: r'saleId',
       type: IsarType.long,
     ),
+    r'sentAt': PropertySchema(
+      id: 24,
+      name: r'sentAt',
+      type: IsarType.dateTime,
+    ),
     r'status': PropertySchema(
-      id: 22,
+      id: 25,
       name: r'status',
       type: IsarType.byte,
       enumMap: _InvoicestatusEnumValueMap,
     ),
     r'subtotal': PropertySchema(
-      id: 23,
+      id: 26,
       name: r'subtotal',
       type: IsarType.double,
     ),
     r'syncStatus': PropertySchema(
-      id: 24,
+      id: 27,
       name: r'syncStatus',
       type: IsarType.byte,
       enumMap: _InvoicesyncStatusEnumValueMap,
     ),
     r'taxAmount': PropertySchema(
-      id: 25,
+      id: 28,
       name: r'taxAmount',
       type: IsarType.double,
     ),
     r'total': PropertySchema(
-      id: 26,
+      id: 29,
       name: r'total',
       type: IsarType.double,
     ),
     r'totalQuantity': PropertySchema(
-      id: 27,
+      id: 30,
       name: r'totalQuantity',
       type: IsarType.double,
     ),
     r'updatedAt': PropertySchema(
-      id: 28,
+      id: 31,
       name: r'updatedAt',
       type: IsarType.dateTime,
     ),
     r'userId': PropertySchema(
-      id: 29,
+      id: 32,
       name: r'userId',
       type: IsarType.long,
     ),
     r'userName': PropertySchema(
-      id: 30,
+      id: 33,
       name: r'userName',
       type: IsarType.string,
     )
@@ -287,45 +302,48 @@ void _invoiceSerialize(
 ) {
   writer.writeDouble(offsets[0], object.amountPaid);
   writer.writeDouble(offsets[1], object.balance);
-  writer.writeDateTime(offsets[2], object.convertedToSaleAt);
-  writer.writeDateTime(offsets[3], object.createdAt);
-  writer.writeLong(offsets[4], object.customerId);
-  writer.writeString(offsets[5], object.customerName);
-  writer.writeString(offsets[6], object.customerPhone);
-  writer.writeDouble(offsets[7], object.discount);
-  writer.writeDouble(offsets[8], object.discountPercent);
-  writer.writeDateTime(offsets[9], object.dueAt);
-  writer.writeString(offsets[10], object.invoiceNumber);
-  writer.writeBool(offsets[11], object.isOverdue);
-  writer.writeBool(offsets[12], object.isPaid);
-  writer.writeDateTime(offsets[13], object.issuedAt);
-  writer.writeLong(offsets[14], object.itemCount);
+  writer.writeBool(offsets[2], object.canRecordPayment);
+  writer.writeDateTime(offsets[3], object.cancelledAt);
+  writer.writeDateTime(offsets[4], object.convertedToSaleAt);
+  writer.writeDateTime(offsets[5], object.createdAt);
+  writer.writeLong(offsets[6], object.customerId);
+  writer.writeString(offsets[7], object.customerName);
+  writer.writeString(offsets[8], object.customerPhone);
+  writer.writeDouble(offsets[9], object.discount);
+  writer.writeDouble(offsets[10], object.discountPercent);
+  writer.writeDateTime(offsets[11], object.dueAt);
+  writer.writeString(offsets[12], object.invoiceNumber);
+  writer.writeBool(offsets[13], object.isOverdue);
+  writer.writeBool(offsets[14], object.isPaid);
+  writer.writeDateTime(offsets[15], object.issuedAt);
+  writer.writeLong(offsets[16], object.itemCount);
   writer.writeObjectList<InvoiceItem>(
-    offsets[15],
+    offsets[17],
     allOffsets,
     InvoiceItemSchema.serialize,
     object.items,
   );
-  writer.writeString(offsets[16], object.notes);
-  writer.writeDouble(offsets[17], object.paymentPercentage);
+  writer.writeString(offsets[18], object.notes);
+  writer.writeDouble(offsets[19], object.paymentPercentage);
   writer.writeObjectList<InvoicePayment>(
-    offsets[18],
+    offsets[20],
     allOffsets,
     InvoicePaymentSchema.serialize,
     object.payments,
   );
-  writer.writeDouble(offsets[19], object.remainingBalance);
-  writer.writeString(offsets[20], object.remoteId);
-  writer.writeLong(offsets[21], object.saleId);
-  writer.writeByte(offsets[22], object.status.index);
-  writer.writeDouble(offsets[23], object.subtotal);
-  writer.writeByte(offsets[24], object.syncStatus.index);
-  writer.writeDouble(offsets[25], object.taxAmount);
-  writer.writeDouble(offsets[26], object.total);
-  writer.writeDouble(offsets[27], object.totalQuantity);
-  writer.writeDateTime(offsets[28], object.updatedAt);
-  writer.writeLong(offsets[29], object.userId);
-  writer.writeString(offsets[30], object.userName);
+  writer.writeDouble(offsets[21], object.remainingBalance);
+  writer.writeString(offsets[22], object.remoteId);
+  writer.writeLong(offsets[23], object.saleId);
+  writer.writeDateTime(offsets[24], object.sentAt);
+  writer.writeByte(offsets[25], object.status.index);
+  writer.writeDouble(offsets[26], object.subtotal);
+  writer.writeByte(offsets[27], object.syncStatus.index);
+  writer.writeDouble(offsets[28], object.taxAmount);
+  writer.writeDouble(offsets[29], object.total);
+  writer.writeDouble(offsets[30], object.totalQuantity);
+  writer.writeDateTime(offsets[31], object.updatedAt);
+  writer.writeLong(offsets[32], object.userId);
+  writer.writeString(offsets[33], object.userName);
 }
 
 Invoice _invoiceDeserialize(
@@ -337,46 +355,48 @@ Invoice _invoiceDeserialize(
   final object = Invoice();
   object.amountPaid = reader.readDouble(offsets[0]);
   object.balance = reader.readDouble(offsets[1]);
-  object.convertedToSaleAt = reader.readDateTimeOrNull(offsets[2]);
-  object.createdAt = reader.readDateTime(offsets[3]);
-  object.customerId = reader.readLongOrNull(offsets[4]);
-  object.customerName = reader.readStringOrNull(offsets[5]);
-  object.customerPhone = reader.readStringOrNull(offsets[6]);
-  object.discount = reader.readDouble(offsets[7]);
-  object.discountPercent = reader.readDouble(offsets[8]);
-  object.dueAt = reader.readDateTimeOrNull(offsets[9]);
+  object.cancelledAt = reader.readDateTimeOrNull(offsets[3]);
+  object.convertedToSaleAt = reader.readDateTimeOrNull(offsets[4]);
+  object.createdAt = reader.readDateTime(offsets[5]);
+  object.customerId = reader.readLongOrNull(offsets[6]);
+  object.customerName = reader.readStringOrNull(offsets[7]);
+  object.customerPhone = reader.readStringOrNull(offsets[8]);
+  object.discount = reader.readDouble(offsets[9]);
+  object.discountPercent = reader.readDouble(offsets[10]);
+  object.dueAt = reader.readDateTimeOrNull(offsets[11]);
   object.id = id;
-  object.invoiceNumber = reader.readString(offsets[10]);
-  object.issuedAt = reader.readDateTime(offsets[13]);
+  object.invoiceNumber = reader.readString(offsets[12]);
+  object.issuedAt = reader.readDateTime(offsets[15]);
   object.items = reader.readObjectList<InvoiceItem>(
-        offsets[15],
+        offsets[17],
         InvoiceItemSchema.deserialize,
         allOffsets,
         InvoiceItem(),
       ) ??
       [];
-  object.notes = reader.readStringOrNull(offsets[16]);
+  object.notes = reader.readStringOrNull(offsets[18]);
   object.payments = reader.readObjectList<InvoicePayment>(
-        offsets[18],
+        offsets[20],
         InvoicePaymentSchema.deserialize,
         allOffsets,
         InvoicePayment(),
       ) ??
       [];
-  object.remoteId = reader.readStringOrNull(offsets[20]);
-  object.saleId = reader.readLongOrNull(offsets[21]);
+  object.remoteId = reader.readStringOrNull(offsets[22]);
+  object.saleId = reader.readLongOrNull(offsets[23]);
+  object.sentAt = reader.readDateTimeOrNull(offsets[24]);
   object.status =
-      _InvoicestatusValueEnumMap[reader.readByteOrNull(offsets[22])] ??
+      _InvoicestatusValueEnumMap[reader.readByteOrNull(offsets[25])] ??
           InvoiceStatus.draft;
-  object.subtotal = reader.readDouble(offsets[23]);
+  object.subtotal = reader.readDouble(offsets[26]);
   object.syncStatus =
-      _InvoicesyncStatusValueEnumMap[reader.readByteOrNull(offsets[24])] ??
+      _InvoicesyncStatusValueEnumMap[reader.readByteOrNull(offsets[27])] ??
           SyncStatus.synced;
-  object.taxAmount = reader.readDouble(offsets[25]);
-  object.total = reader.readDouble(offsets[26]);
-  object.updatedAt = reader.readDateTimeOrNull(offsets[28]);
-  object.userId = reader.readLong(offsets[29]);
-  object.userName = reader.readStringOrNull(offsets[30]);
+  object.taxAmount = reader.readDouble(offsets[28]);
+  object.total = reader.readDouble(offsets[29]);
+  object.updatedAt = reader.readDateTimeOrNull(offsets[31]);
+  object.userId = reader.readLong(offsets[32]);
+  object.userName = reader.readStringOrNull(offsets[33]);
   return object;
 }
 
@@ -392,32 +412,36 @@ P _invoiceDeserializeProp<P>(
     case 1:
       return (reader.readDouble(offset)) as P;
     case 2:
-      return (reader.readDateTimeOrNull(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 3:
-      return (reader.readDateTime(offset)) as P;
-    case 4:
-      return (reader.readLongOrNull(offset)) as P;
-    case 5:
-      return (reader.readStringOrNull(offset)) as P;
-    case 6:
-      return (reader.readStringOrNull(offset)) as P;
-    case 7:
-      return (reader.readDouble(offset)) as P;
-    case 8:
-      return (reader.readDouble(offset)) as P;
-    case 9:
       return (reader.readDateTimeOrNull(offset)) as P;
-    case 10:
-      return (reader.readString(offset)) as P;
-    case 11:
-      return (reader.readBool(offset)) as P;
-    case 12:
-      return (reader.readBool(offset)) as P;
-    case 13:
+    case 4:
+      return (reader.readDateTimeOrNull(offset)) as P;
+    case 5:
       return (reader.readDateTime(offset)) as P;
+    case 6:
+      return (reader.readLongOrNull(offset)) as P;
+    case 7:
+      return (reader.readStringOrNull(offset)) as P;
+    case 8:
+      return (reader.readStringOrNull(offset)) as P;
+    case 9:
+      return (reader.readDouble(offset)) as P;
+    case 10:
+      return (reader.readDouble(offset)) as P;
+    case 11:
+      return (reader.readDateTimeOrNull(offset)) as P;
+    case 12:
+      return (reader.readString(offset)) as P;
+    case 13:
+      return (reader.readBool(offset)) as P;
     case 14:
-      return (reader.readLong(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 15:
+      return (reader.readDateTime(offset)) as P;
+    case 16:
+      return (reader.readLong(offset)) as P;
+    case 17:
       return (reader.readObjectList<InvoiceItem>(
             offset,
             InvoiceItemSchema.deserialize,
@@ -425,11 +449,11 @@ P _invoiceDeserializeProp<P>(
             InvoiceItem(),
           ) ??
           []) as P;
-    case 16:
-      return (reader.readStringOrNull(offset)) as P;
-    case 17:
-      return (reader.readDouble(offset)) as P;
     case 18:
+      return (reader.readStringOrNull(offset)) as P;
+    case 19:
+      return (reader.readDouble(offset)) as P;
+    case 20:
       return (reader.readObjectList<InvoicePayment>(
             offset,
             InvoicePaymentSchema.deserialize,
@@ -437,31 +461,33 @@ P _invoiceDeserializeProp<P>(
             InvoicePayment(),
           ) ??
           []) as P;
-    case 19:
-      return (reader.readDouble(offset)) as P;
-    case 20:
-      return (reader.readStringOrNull(offset)) as P;
     case 21:
-      return (reader.readLongOrNull(offset)) as P;
+      return (reader.readDouble(offset)) as P;
     case 22:
+      return (reader.readStringOrNull(offset)) as P;
+    case 23:
+      return (reader.readLongOrNull(offset)) as P;
+    case 24:
+      return (reader.readDateTimeOrNull(offset)) as P;
+    case 25:
       return (_InvoicestatusValueEnumMap[reader.readByteOrNull(offset)] ??
           InvoiceStatus.draft) as P;
-    case 23:
-      return (reader.readDouble(offset)) as P;
-    case 24:
-      return (_InvoicesyncStatusValueEnumMap[reader.readByteOrNull(offset)] ??
-          SyncStatus.synced) as P;
-    case 25:
-      return (reader.readDouble(offset)) as P;
     case 26:
       return (reader.readDouble(offset)) as P;
     case 27:
-      return (reader.readDouble(offset)) as P;
+      return (_InvoicesyncStatusValueEnumMap[reader.readByteOrNull(offset)] ??
+          SyncStatus.synced) as P;
     case 28:
-      return (reader.readDateTimeOrNull(offset)) as P;
+      return (reader.readDouble(offset)) as P;
     case 29:
-      return (reader.readLong(offset)) as P;
+      return (reader.readDouble(offset)) as P;
     case 30:
+      return (reader.readDouble(offset)) as P;
+    case 31:
+      return (reader.readDateTimeOrNull(offset)) as P;
+    case 32:
+      return (reader.readLong(offset)) as P;
+    case 33:
       return (reader.readStringOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -903,6 +929,85 @@ extension InvoiceQueryFilter
         upper: upper,
         includeUpper: includeUpper,
         epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<Invoice, Invoice, QAfterFilterCondition> canRecordPaymentEqualTo(
+      bool value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'canRecordPayment',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Invoice, Invoice, QAfterFilterCondition> cancelledAtIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'cancelledAt',
+      ));
+    });
+  }
+
+  QueryBuilder<Invoice, Invoice, QAfterFilterCondition> cancelledAtIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'cancelledAt',
+      ));
+    });
+  }
+
+  QueryBuilder<Invoice, Invoice, QAfterFilterCondition> cancelledAtEqualTo(
+      DateTime? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'cancelledAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Invoice, Invoice, QAfterFilterCondition> cancelledAtGreaterThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'cancelledAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Invoice, Invoice, QAfterFilterCondition> cancelledAtLessThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'cancelledAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Invoice, Invoice, QAfterFilterCondition> cancelledAtBetween(
+    DateTime? lower,
+    DateTime? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'cancelledAt',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
       ));
     });
   }
@@ -2564,6 +2669,75 @@ extension InvoiceQueryFilter
     });
   }
 
+  QueryBuilder<Invoice, Invoice, QAfterFilterCondition> sentAtIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'sentAt',
+      ));
+    });
+  }
+
+  QueryBuilder<Invoice, Invoice, QAfterFilterCondition> sentAtIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'sentAt',
+      ));
+    });
+  }
+
+  QueryBuilder<Invoice, Invoice, QAfterFilterCondition> sentAtEqualTo(
+      DateTime? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'sentAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Invoice, Invoice, QAfterFilterCondition> sentAtGreaterThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'sentAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Invoice, Invoice, QAfterFilterCondition> sentAtLessThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'sentAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Invoice, Invoice, QAfterFilterCondition> sentAtBetween(
+    DateTime? lower,
+    DateTime? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'sentAt',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
   QueryBuilder<Invoice, Invoice, QAfterFilterCondition> statusEqualTo(
       InvoiceStatus value) {
     return QueryBuilder.apply(this, (query) {
@@ -3233,6 +3407,30 @@ extension InvoiceQuerySortBy on QueryBuilder<Invoice, Invoice, QSortBy> {
     });
   }
 
+  QueryBuilder<Invoice, Invoice, QAfterSortBy> sortByCanRecordPayment() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'canRecordPayment', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Invoice, Invoice, QAfterSortBy> sortByCanRecordPaymentDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'canRecordPayment', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Invoice, Invoice, QAfterSortBy> sortByCancelledAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'cancelledAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Invoice, Invoice, QAfterSortBy> sortByCancelledAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'cancelledAt', Sort.desc);
+    });
+  }
+
   QueryBuilder<Invoice, Invoice, QAfterSortBy> sortByConvertedToSaleAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'convertedToSaleAt', Sort.asc);
@@ -3449,6 +3647,18 @@ extension InvoiceQuerySortBy on QueryBuilder<Invoice, Invoice, QSortBy> {
     });
   }
 
+  QueryBuilder<Invoice, Invoice, QAfterSortBy> sortBySentAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'sentAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Invoice, Invoice, QAfterSortBy> sortBySentAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'sentAt', Sort.desc);
+    });
+  }
+
   QueryBuilder<Invoice, Invoice, QAfterSortBy> sortByStatus() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'status', Sort.asc);
@@ -3581,6 +3791,30 @@ extension InvoiceQuerySortThenBy
   QueryBuilder<Invoice, Invoice, QAfterSortBy> thenByBalanceDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'balance', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Invoice, Invoice, QAfterSortBy> thenByCanRecordPayment() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'canRecordPayment', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Invoice, Invoice, QAfterSortBy> thenByCanRecordPaymentDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'canRecordPayment', Sort.desc);
+    });
+  }
+
+  QueryBuilder<Invoice, Invoice, QAfterSortBy> thenByCancelledAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'cancelledAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Invoice, Invoice, QAfterSortBy> thenByCancelledAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'cancelledAt', Sort.desc);
     });
   }
 
@@ -3812,6 +4046,18 @@ extension InvoiceQuerySortThenBy
     });
   }
 
+  QueryBuilder<Invoice, Invoice, QAfterSortBy> thenBySentAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'sentAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Invoice, Invoice, QAfterSortBy> thenBySentAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'sentAt', Sort.desc);
+    });
+  }
+
   QueryBuilder<Invoice, Invoice, QAfterSortBy> thenByStatus() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'status', Sort.asc);
@@ -3935,6 +4181,18 @@ extension InvoiceQueryWhereDistinct
     });
   }
 
+  QueryBuilder<Invoice, Invoice, QDistinct> distinctByCanRecordPayment() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'canRecordPayment');
+    });
+  }
+
+  QueryBuilder<Invoice, Invoice, QDistinct> distinctByCancelledAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'cancelledAt');
+    });
+  }
+
   QueryBuilder<Invoice, Invoice, QDistinct> distinctByConvertedToSaleAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'convertedToSaleAt');
@@ -4050,6 +4308,12 @@ extension InvoiceQueryWhereDistinct
     });
   }
 
+  QueryBuilder<Invoice, Invoice, QDistinct> distinctBySentAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'sentAt');
+    });
+  }
+
   QueryBuilder<Invoice, Invoice, QDistinct> distinctByStatus() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'status');
@@ -4123,6 +4387,18 @@ extension InvoiceQueryProperty
   QueryBuilder<Invoice, double, QQueryOperations> balanceProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'balance');
+    });
+  }
+
+  QueryBuilder<Invoice, bool, QQueryOperations> canRecordPaymentProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'canRecordPayment');
+    });
+  }
+
+  QueryBuilder<Invoice, DateTime?, QQueryOperations> cancelledAtProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'cancelledAt');
     });
   }
 
@@ -4245,6 +4521,12 @@ extension InvoiceQueryProperty
   QueryBuilder<Invoice, int?, QQueryOperations> saleIdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'saleId');
+    });
+  }
+
+  QueryBuilder<Invoice, DateTime?, QQueryOperations> sentAtProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'sentAt');
     });
   }
 

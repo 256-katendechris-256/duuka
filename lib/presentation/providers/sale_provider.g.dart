@@ -311,7 +311,7 @@ class _SaleByIdProviderElement extends AutoDisposeFutureProviderElement<Sale?>
   int get id => (origin as SaleByIdProvider).id;
 }
 
-String _$todayStatsHash() => r'9f11c542cd5fec258df42bbfbf861929ab629c20';
+String _$todayStatsHash() => r'ec0c98908a5436f29bf70012da9462ea81189ad6';
 
 /// See also [todayStats].
 @ProviderFor(todayStats)
@@ -355,7 +355,7 @@ final salesProvider =
 );
 
 typedef _$Sales = AutoDisposeAsyncNotifier<List<Sale>>;
-String _$cartHash() => r'ce39eecb54d26f87f18c10d479c2e4dc3f5f4daf';
+String _$cartHash() => r'b0602e11456b988e09d7c20a6a736d82e78a6415';
 
 /// See also [Cart].
 @ProviderFor(Cart)

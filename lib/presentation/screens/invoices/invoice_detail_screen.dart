@@ -95,11 +95,15 @@ class _InvoiceDetailScreenState extends ConsumerState<InvoiceDetailScreen> {
                       child: pw.Column(
                         crossAxisAlignment: pw.CrossAxisAlignment.end,
                         children: [
-                          _buildPdfDetailRow('Invoice Number:', invoice.invoiceNumber),
-                          _buildPdfDetailRow('Issue Date:', DuukaFormatters.date(invoice.issuedAt)),
+                          _buildPdfDetailRow(
+                              'Invoice Number:', invoice.invoiceNumber),
+                          _buildPdfDetailRow('Issue Date:',
+                              DuukaFormatters.date(invoice.issuedAt)),
                           if (invoice.dueAt != null)
-                            _buildPdfDetailRow('Due Date:', DuukaFormatters.date(invoice.dueAt!)),
-                          _buildPdfDetailRow('Status:', invoice.status.label.toUpperCase()),
+                            _buildPdfDetailRow('Due Date:',
+                                DuukaFormatters.date(invoice.dueAt!)),
+                          _buildPdfDetailRow(
+                              'Status:', invoice.status.name.toUpperCase()),
                         ],
                       ),
                     ),
@@ -119,7 +123,8 @@ class _InvoiceDetailScreenState extends ConsumerState<InvoiceDetailScreen> {
                       width: 250,
                       child: pw.Column(
                         children: [
-                          _buildPdfSummaryRow('Subtotal', DuukaFormatters.currency(invoice.subtotal)),
+                          _buildPdfSummaryRow('Subtotal',
+                              DuukaFormatters.currency(invoice.subtotal)),
                           if (invoice.discount > 0)
                             _buildPdfSummaryRow(
                               'Discount (${invoice.discountPercent > 0 ? '${invoice.discountPercent.toStringAsFixed(0)}%' : 'Fixed'})',
@@ -127,12 +132,20 @@ class _InvoiceDetailScreenState extends ConsumerState<InvoiceDetailScreen> {
                               isNegative: true,
                             ),
                           if (invoice.taxAmount > 0)
-                            _buildPdfSummaryRow('Tax/VAT', DuukaFormatters.currency(invoice.taxAmount)),
+                            _buildPdfSummaryRow('Tax/VAT',
+                                DuukaFormatters.currency(invoice.taxAmount)),
                           pw.Divider(),
-                          _buildPdfSummaryRow('Total', DuukaFormatters.currency(invoice.total), isTotal: true),
-                          _buildPdfSummaryRow('Amount Paid', DuukaFormatters.currency(invoice.amountPaid)),
+                          _buildPdfSummaryRow(
+                              'Total', DuukaFormatters.currency(invoice.total),
+                              isTotal: true),
+                          _buildPdfSummaryRow('Amount Paid',
+                              DuukaFormatters.currency(invoice.amountPaid)),
                           if (invoice.remainingBalance > 0)
-                            _buildPdfSummaryRow('Balance Due', DuukaFormatters.currency(invoice.remainingBalance), isTotal: true),
+                            _buildPdfSummaryRow(
+                                'Balance Due',
+                                DuukaFormatters.currency(
+                                    invoice.remainingBalance),
+                                isTotal: true),
                         ],
                       ),
                     ),
@@ -215,7 +228,8 @@ class _InvoiceDetailScreenState extends ConsumerState<InvoiceDetailScreen> {
                         color: PdfColors.grey700,
                       )),
                   pw.SizedBox(height: 5),
-                  pw.Text(invoice.notes!, style: const pw.TextStyle(fontSize: 10)),
+                  pw.Text(invoice.notes!,
+                      style: const pw.TextStyle(fontSize: 10)),
                   pw.SizedBox(height: 20),
                 ],
 
@@ -253,7 +267,8 @@ class _InvoiceDetailScreenState extends ConsumerState<InvoiceDetailScreen> {
 
       // Save PDF to temporary directory
       final tempDir = await getTemporaryDirectory();
-      final file = File('${tempDir.path}/invoice_${invoice.invoiceNumber.replaceAll('/', '-')}.pdf');
+      final file = File(
+          '${tempDir.path}/invoice_${invoice.invoiceNumber.replaceAll('/', '-')}.pdf');
       await file.writeAsBytes(await pdf.save());
 
       // Share the PDF
@@ -303,14 +318,16 @@ class _InvoiceDetailScreenState extends ConsumerState<InvoiceDetailScreen> {
               if (business?.phone != null && business!.phone!.isNotEmpty)
                 pw.Text(
                   business.phone!,
-                  style: const pw.TextStyle(fontSize: 11, color: PdfColors.white),
+                  style:
+                      const pw.TextStyle(fontSize: 11, color: PdfColors.white),
                 ),
               if (business?.area != null || business?.district != null)
                 pw.Text(
                   [business?.area, business?.district]
                       .where((s) => s != null && s.isNotEmpty)
                       .join(', '),
-                  style: const pw.TextStyle(fontSize: 11, color: PdfColors.white),
+                  style:
+                      const pw.TextStyle(fontSize: 11, color: PdfColors.white),
                 ),
             ],
           ),
@@ -326,13 +343,14 @@ class _InvoiceDetailScreenState extends ConsumerState<InvoiceDetailScreen> {
                 ),
               ),
               pw.Container(
-                padding: const pw.EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                padding:
+                    const pw.EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 decoration: pw.BoxDecoration(
                   color: _getPdfStatusColor(invoice.status),
                   borderRadius: pw.BorderRadius.circular(4),
                 ),
                 child: pw.Text(
-                  invoice.status.label.toUpperCase(),
+                  invoice.status.name.toUpperCase(),
                   style: pw.TextStyle(
                     fontSize: 10,
                     fontWeight: pw.FontWeight.bold,
@@ -353,9 +371,13 @@ class _InvoiceDetailScreenState extends ConsumerState<InvoiceDetailScreen> {
       child: pw.Row(
         mainAxisAlignment: pw.MainAxisAlignment.end,
         children: [
-          pw.Text(label, style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700)),
+          pw.Text(label,
+              style:
+                  const pw.TextStyle(fontSize: 10, color: PdfColors.grey700)),
           pw.SizedBox(width: 10),
-          pw.Text(value, style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold)),
+          pw.Text(value,
+              style:
+                  pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold)),
         ],
       ),
     );
@@ -377,19 +399,30 @@ class _InvoiceDetailScreenState extends ConsumerState<InvoiceDetailScreen> {
           children: [
             pw.Padding(
               padding: const pw.EdgeInsets.all(8),
-              child: pw.Text('Description', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 11)),
+              child: pw.Text('Description',
+                  style: pw.TextStyle(
+                      fontWeight: pw.FontWeight.bold, fontSize: 11)),
             ),
             pw.Padding(
               padding: const pw.EdgeInsets.all(8),
-              child: pw.Text('Qty', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 11), textAlign: pw.TextAlign.center),
+              child: pw.Text('Qty',
+                  style: pw.TextStyle(
+                      fontWeight: pw.FontWeight.bold, fontSize: 11),
+                  textAlign: pw.TextAlign.center),
             ),
             pw.Padding(
               padding: const pw.EdgeInsets.all(8),
-              child: pw.Text('Unit Price', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 11), textAlign: pw.TextAlign.right),
+              child: pw.Text('Unit Price',
+                  style: pw.TextStyle(
+                      fontWeight: pw.FontWeight.bold, fontSize: 11),
+                  textAlign: pw.TextAlign.right),
             ),
             pw.Padding(
               padding: const pw.EdgeInsets.all(8),
-              child: pw.Text('Total', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 11), textAlign: pw.TextAlign.right),
+              child: pw.Text('Total',
+                  style: pw.TextStyle(
+                      fontWeight: pw.FontWeight.bold, fontSize: 11),
+                  textAlign: pw.TextAlign.right),
             ),
           ],
         ),
@@ -398,7 +431,8 @@ class _InvoiceDetailScreenState extends ConsumerState<InvoiceDetailScreen> {
               children: [
                 pw.Padding(
                   padding: const pw.EdgeInsets.all(8),
-                  child: pw.Text(item.productName, style: const pw.TextStyle(fontSize: 10)),
+                  child: pw.Text(item.productName,
+                      style: const pw.TextStyle(fontSize: 10)),
                 ),
                 pw.Padding(
                   padding: const pw.EdgeInsets.all(8),
@@ -420,7 +454,8 @@ class _InvoiceDetailScreenState extends ConsumerState<InvoiceDetailScreen> {
                   padding: const pw.EdgeInsets.all(8),
                   child: pw.Text(
                     DuukaFormatters.currency(item.total),
-                    style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold),
+                    style: pw.TextStyle(
+                        fontSize: 10, fontWeight: pw.FontWeight.bold),
                     textAlign: pw.TextAlign.right,
                   ),
                 ),
@@ -430,7 +465,8 @@ class _InvoiceDetailScreenState extends ConsumerState<InvoiceDetailScreen> {
     );
   }
 
-  pw.Widget _buildPdfSummaryRow(String label, String value, {bool isTotal = false, bool isNegative = false}) {
+  pw.Widget _buildPdfSummaryRow(String label, String value,
+      {bool isTotal = false, bool isNegative = false}) {
     return pw.Padding(
       padding: const pw.EdgeInsets.symmetric(vertical: 3),
       child: pw.Row(
@@ -448,7 +484,9 @@ class _InvoiceDetailScreenState extends ConsumerState<InvoiceDetailScreen> {
             style: pw.TextStyle(
               fontSize: isTotal ? 12 : 10,
               fontWeight: pw.FontWeight.bold,
-              color: isNegative ? PdfColors.red : (isTotal ? PdfColor.fromHex('#1E3A5F') : PdfColors.black),
+              color: isNegative
+                  ? PdfColors.red
+                  : (isTotal ? PdfColor.fromHex('#1E3A5F') : PdfColors.black),
             ),
           ),
         ],
@@ -544,7 +582,8 @@ class _InvoiceDetailScreenState extends ConsumerState<InvoiceDetailScreen> {
                         child: Column(
                           children: [
                             // Invoice header with business info
-                            _buildInvoiceHeader(businessAsync.valueOrNull, invoice),
+                            _buildInvoiceHeader(
+                                businessAsync.valueOrNull, invoice),
 
                             // Customer and Invoice info
                             Padding(
@@ -584,7 +623,8 @@ class _InvoiceDetailScreenState extends ConsumerState<InvoiceDetailScreen> {
                             ],
 
                             // Notes
-                            if (invoice.notes != null && invoice.notes!.isNotEmpty) ...[
+                            if (invoice.notes != null &&
+                                invoice.notes!.isNotEmpty) ...[
                               _buildDashedDivider(),
                               Padding(
                                 padding: EdgeInsets.all(20.w),
@@ -645,7 +685,8 @@ class _InvoiceDetailScreenState extends ConsumerState<InvoiceDetailScreen> {
                               icon: Icons.picture_as_pdf,
                               onPressed: _isSharing
                                   ? null
-                                  : () => _shareInvoiceAsPdf(invoice, businessAsync.valueOrNull),
+                                  : () => _shareInvoiceAsPdf(
+                                      invoice, businessAsync.valueOrNull),
                               isLoading: _isSharing,
                             ),
                           ),
@@ -656,7 +697,8 @@ class _InvoiceDetailScreenState extends ConsumerState<InvoiceDetailScreen> {
                               child: DuukaButton.primary(
                                 label: 'Record Payment',
                                 icon: Icons.payments,
-                                onPressed: () => _showPaymentDialog(context, invoice),
+                                onPressed: () =>
+                                    _showPaymentDialog(context, invoice),
                               ),
                             ),
                           ],
@@ -756,7 +798,7 @@ class _InvoiceDetailScreenState extends ConsumerState<InvoiceDetailScreen> {
               borderRadius: BorderRadius.circular(6.r),
             ),
             child: Text(
-              invoice.status.label.toUpperCase(),
+              invoice.status.name.toUpperCase(),
               style: TextStyle(
                 fontSize: 12.sp,
                 fontWeight: FontWeight.bold,
@@ -801,7 +843,8 @@ class _InvoiceDetailScreenState extends ConsumerState<InvoiceDetailScreen> {
             SizedBox(height: 4.h),
             Row(
               children: [
-                Icon(Icons.phone, size: 14.sp, color: DuukaColors.textSecondary),
+                Icon(Icons.phone,
+                    size: 14.sp, color: DuukaColors.textSecondary),
                 SizedBox(width: 6.w),
                 Text(
                   invoice.customerPhone!,
@@ -825,10 +868,12 @@ class _InvoiceDetailScreenState extends ConsumerState<InvoiceDetailScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildDetailItem('Issue Date', DuukaFormatters.date(invoice.issuedAt)),
+              _buildDetailItem(
+                  'Issue Date', DuukaFormatters.date(invoice.issuedAt)),
               SizedBox(height: 12.h),
               if (invoice.dueAt != null)
-                _buildDetailItem('Due Date', DuukaFormatters.date(invoice.dueAt!)),
+                _buildDetailItem(
+                    'Due Date', DuukaFormatters.date(invoice.dueAt!)),
             ],
           ),
         ),
@@ -944,7 +989,8 @@ class _InvoiceDetailScreenState extends ConsumerState<InvoiceDetailScreen> {
               // Header
               TableRow(
                 decoration: BoxDecoration(
-                  border: Border(bottom: BorderSide(color: DuukaColors.border, width: 2)),
+                  border: Border(
+                      bottom: BorderSide(color: DuukaColors.border, width: 2)),
                 ),
                 children: [
                   Padding(
@@ -999,7 +1045,8 @@ class _InvoiceDetailScreenState extends ConsumerState<InvoiceDetailScreen> {
               // Rows
               ...invoice.items.map((item) => TableRow(
                     decoration: BoxDecoration(
-                      border: Border(bottom: BorderSide(color: DuukaColors.divider)),
+                      border: Border(
+                          bottom: BorderSide(color: DuukaColors.divider)),
                     ),
                     children: [
                       Padding(
@@ -1155,7 +1202,8 @@ class _InvoiceDetailScreenState extends ConsumerState<InvoiceDetailScreen> {
           style: TextStyle(
             fontSize: isTotal ? 16.sp : 13.sp,
             fontWeight: FontWeight.w700,
-            color: valueColor ?? (isTotal ? DuukaColors.primary : DuukaColors.textPrimary),
+            color: valueColor ??
+                (isTotal ? DuukaColors.primary : DuukaColors.textPrimary),
           ),
         ),
       ],
@@ -1200,7 +1248,9 @@ class _InvoiceDetailScreenState extends ConsumerState<InvoiceDetailScreen> {
                         ),
                         Text(
                           DuukaFormatters.dateTime(payment.paidAt),
-                          style: TextStyle(fontSize: 11.sp, color: DuukaColors.textSecondary),
+                          style: TextStyle(
+                              fontSize: 11.sp,
+                              color: DuukaColors.textSecondary),
                         ),
                       ],
                     ),
@@ -1376,7 +1426,8 @@ class _InvoiceDetailScreenState extends ConsumerState<InvoiceDetailScreen> {
                     Navigator.of(dialogContext).pop();
                   }
                   if (context.mounted) {
-                    context.showSuccessSnackBar('Payment recorded successfully');
+                    context
+                        .showSuccessSnackBar('Payment recorded successfully');
                   }
                 } catch (e) {
                   if (context.mounted) {

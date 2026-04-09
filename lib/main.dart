@@ -42,11 +42,18 @@ void main() async {
   await DatabaseService.initialize();
 
   // Load Supabase config from bundled asset (assets/config/supabase_config.json)
-  final configJson = await rootBundle.loadString('assets/config/supabase_config.json');
+  final configJson =
+      await rootBundle.loadString('assets/config/supabase_config.json');
   final config = jsonDecode(configJson) as Map<String, dynamic>;
-  final supabaseUrl = (config['SUPABASE_URL'] as String).trim();
-  final supabaseAnonKey = (config['SUPABASE_ANON_KEY'] as String).trim();
-  final googleWebClientId = ((config['GOOGLE_WEB_CLIENT_ID'] as String?) ?? '').trim();
+  final supabaseUrl = (config['supabaseUrl'] as String?)?.trim() ?? '';
+  final supabaseAnonKey = (config['supabaseAnonKey'] as String?)?.trim() ?? '';
+  final googleWebClientId =
+      ((config['googleWebClientId'] as String?) ?? '').trim();
+
+  if (supabaseUrl.isEmpty || supabaseAnonKey.isEmpty) {
+    throw Exception(
+        'Supabase configuration is missing. Please set supabaseUrl and supabaseAnonKey in assets/config/supabase_config.json');
+  }
 
   await SupabaseService.initialize(
     url: supabaseUrl,
